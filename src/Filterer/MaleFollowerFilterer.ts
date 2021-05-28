@@ -37,11 +37,11 @@ export class MaleFollowerFilterer implements IFollowerFilterer {
     const splitFullName = fullName.split(' ')
 
     if (some(splitFullName, (name) => this.names.includes(name.toUpperCase()))) {
-      log(`"${follower.full_name}" PASSED`)
+      log(`${follower.full_name} (${follower.username}) PASS`)
 
       return true
     } else {
-      log(`"${follower.full_name}" FAIL`)
+      log(`${follower.full_name} (${follower.username}) FAIL`)
 
       return false
     }

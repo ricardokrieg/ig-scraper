@@ -3,6 +3,8 @@ import Scorer from "./Scorer"
 import {IFollower, IScoreRequest, IScrapeFollowers} from "../interfaces"
 import IGScraper from "../IGScraper"
 import {MaleFollowerFilterer} from "../Filterer/MaleFollowerFilterer"
+import {NonPrivateFollowerFilterer} from "../Filterer/NonPrivateFollowerFilterer"
+import {NonVerifiedFollowerFilterer} from "../Filterer/NonVerifiedFollowerFilterer"
 
 export default class RealMaleScorer extends Scorer {
   computeScore(scoreRequest: IScoreRequest): Promise<number> {
@@ -18,12 +20,16 @@ export default class RealMaleScorer extends Scorer {
 
       const maleFollowerFilterer = new MaleFollowerFilterer()
       await maleFollowerFilterer.prepare()
+      const nonPrivateFollowerFilterer = new NonPrivateFollowerFilterer()
+      const nonVerifiedFollowerFilterer = new NonVerifiedFollowerFilterer()
 
       let followers: IFollower[] = await igScraper.followers(targetFollowers)
       if (isEmpty(followers)) return resolve(0)
 
       const originalCount = followers.length
 
+      followers = filter(followers, (follower) => nonPrivateFollowerFilterer.check(follower))
+      followers = filter(followers, (follower) => nonVerifiedFollowerFilterer.check(follower))
       followers = filter(followers, (follower) => maleFollowerFilterer.check(follower))
       const score = followers.length / originalCount
 
