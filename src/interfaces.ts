@@ -75,3 +75,26 @@ export interface IFollowersRequestResponse {
   has_next_page: boolean,
   end_cursor?: string,
 }
+
+export interface IScoreRequest {
+  profile?: IProfile,
+  username?: string,
+  limit: number,
+}
+
+export interface IScoreResult {
+  profile: IProfile,
+  score: number,
+}
+
+export interface IScorer {
+  score: (scoreRequest: IScoreRequest) => Promise<IScoreResult>,
+}
+
+export interface IFollowerFilterer {
+  check: (follower: IFollower) => boolean
+}
+
+export interface IProfileFilterer {
+  check: (profile: IProfile) => boolean
+}
