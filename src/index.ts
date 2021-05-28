@@ -1,7 +1,7 @@
 import IGScraper from './IGScraper'
 import {IFollower, IProfile, IScrapeFollowers} from './interfaces'
 import { map } from 'lodash'
-import {RealMaleScorer} from "./Scorer";
+import RealMaleScorer from "./Scorer/RealMaleScorer"
 
 
 // (async () => {

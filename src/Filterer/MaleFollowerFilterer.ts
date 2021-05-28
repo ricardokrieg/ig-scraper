@@ -1,4 +1,4 @@
-import {IFollowerFilterer, IProfileFilterer, IFollower, IProfile} from "./interfaces"
+import {IFollowerFilterer, IFollower} from "../interfaces"
 import debug from "debug"
 import csv from 'csv-parser'
 import fs from 'fs'
