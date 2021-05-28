@@ -18,8 +18,8 @@ export interface IFollower {
 export interface IProfile {
   biography: string,
   external_url?: string,
-  followers_count: number, // < 100 -> fail, > 100 good
-  following_count: number, // > 3000 -> fail, < 3000 good
+  followers_count: number, // > 100 good
+  following_count: number, // < 3000 good
   // followers/following < 0.??? -> fail, followers > following -> good
   full_name: string,
   has_clips: boolean, // good
@@ -33,8 +33,8 @@ export interface IProfile {
   is_verified: boolean,
   profile_pic_url: string,
   username: string,
-  post_count: number, // < 3 -> fail, > 10 -> good
-  posts: IPost[], // ??? -> good
+  post_count: number, // > 10 -> good
+  posts: IPost[], // ??? -> good, ??? -> fail
   igtv_count: number, // > 0 -> good
 }
 

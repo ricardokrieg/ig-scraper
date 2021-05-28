@@ -33,6 +33,7 @@ import RealMaleScorer from "./Scorer/RealMaleScorer"
   const scorer = new RealMaleScorer()
   const result = await scorer.score({ username: 'marciopuxador', limit: 100 })
   // const result = await scorer.score({ username: 'lindasbrasileiras20', limit: 100 })
+  // const result = await scorer.score({ username: 'tarcilapalomaa', limit: 100 })
 
   console.log(`${(result.score * 100).toFixed(0)}%`)
 })()

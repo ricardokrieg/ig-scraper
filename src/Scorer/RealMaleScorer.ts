@@ -11,6 +11,9 @@ import {NonBusinessProfileFilterer} from "../Filterer/NonBusinessProfileFilterer
 import {NonProfessionalProfileFilterer} from "../Filterer/NonProfessionalProfileFilterer"
 import {NonJoinedRecentlyProfileFilterer} from "../Filterer/NonJoinedRecentlyProfileFilterer"
 import {HasMinPostCountProfileFilterer} from "../Filterer/HasMinPostCountProfileFilterer"
+import {HasMinFollowersCountProfileFilterer} from "../Filterer/HasMinFollowersCountProfileFilterer"
+import {HasMaxFollowingCountProfileFilterer} from "../Filterer/HasMaxFollowingCountProfileFilterer"
+import {HasMinFollowersFollowingRatioProfileFilterer} from "../Filterer/HasMinFollowersFollowingRatioProfileFilterer"
 import debug from "debug";
 
 
@@ -40,9 +43,13 @@ export default class RealMaleScorer extends Scorer {
       const nonProfessionalProfileFilterer = new NonProfessionalProfileFilterer()
       const nonJoinedRecentlyProfileFilterer = new NonJoinedRecentlyProfileFilterer()
       const hasMinPostCountProfileFilterer = new HasMinPostCountProfileFilterer()
+      const hasMinFollowersCountProfileFilterer = new HasMinFollowersCountProfileFilterer()
+      const hasMaxFollowingCountProfileFilterer = new HasMaxFollowingCountProfileFilterer()
+      const hasMinFollowersFollowingRatioProfileFilterer = new HasMinFollowersFollowingRatioProfileFilterer()
 
       let originalCount = 0
       let scoreCount = 0
+      let errorCount = 0
 
       for await (let follower of igScraper.followers(targetFollowers)) {
         originalCount++
@@ -57,6 +64,13 @@ export default class RealMaleScorer extends Scorer {
         try {
           profile = await igScraper.profile(follower.username)
         } catch (err) {
+          errorCount++
+
+          if (errorCount > 10) {
+            console.error(`Exiting. Too many errors`)
+            process.exit(1)
+          }
+
           log(`${follower.full_name} (${follower.username}) Failed to fetch profile`)
           console.error(err)
           continue
@@ -67,6 +81,9 @@ export default class RealMaleScorer extends Scorer {
         // if (!nonProfessionalProfileFilterer.check(profile)) continue
         if (!nonJoinedRecentlyProfileFilterer.check(profile)) continue
         if (!hasMinPostCountProfileFilterer.check(profile)) continue
+        if (!hasMinFollowersCountProfileFilterer.check(profile)) continue
+        if (!hasMaxFollowingCountProfileFilterer.check(profile)) continue
+        if (!hasMinFollowersFollowingRatioProfileFilterer.check(profile)) continue
 
         scoreCount++
       }
