@@ -7,6 +7,10 @@ import {NonVerifiedFollowerFilterer} from "../Filterer/NonVerifiedFollowerFilter
 import {ProfilePictureFollowerFilterer} from "../Filterer/ProfilePictureFollowerFilterer"
 import {UsernameNameMatchesFollowerFilterer} from "../Filterer/UsernameNameMatchesFollowerFilterer"
 import {NonExternalUrlProfileFilterer} from "../Filterer/NonExternalUrlProfileFilterer"
+import {NonBusinessProfileFilterer} from "../Filterer/NonBusinessProfileFilterer"
+import {NonProfessionalProfileFilterer} from "../Filterer/NonProfessionalProfileFilterer"
+import {NonJoinedRecentlyProfileFilterer} from "../Filterer/NonJoinedRecentlyProfileFilterer"
+import {HasMinPostCountProfileFilterer} from "../Filterer/HasMinPostCountProfileFilterer"
 import debug from "debug";
 
 
@@ -32,6 +36,10 @@ export default class RealMaleScorer extends Scorer {
       const usernameNameMatchesFollowerFilterer = new UsernameNameMatchesFollowerFilterer()
 
       const nonExternalUrlProfileFilterer = new NonExternalUrlProfileFilterer()
+      const nonBusinessProfileFilterer = new NonBusinessProfileFilterer()
+      const nonProfessionalProfileFilterer = new NonProfessionalProfileFilterer()
+      const nonJoinedRecentlyProfileFilterer = new NonJoinedRecentlyProfileFilterer()
+      const hasMinPostCountProfileFilterer = new HasMinPostCountProfileFilterer()
 
       let originalCount = 0
       let scoreCount = 0
@@ -55,6 +63,10 @@ export default class RealMaleScorer extends Scorer {
         }
 
         if (!nonExternalUrlProfileFilterer.check(profile)) continue
+        if (!nonBusinessProfileFilterer.check(profile)) continue
+        // if (!nonProfessionalProfileFilterer.check(profile)) continue
+        if (!nonJoinedRecentlyProfileFilterer.check(profile)) continue
+        if (!hasMinPostCountProfileFilterer.check(profile)) continue
 
         scoreCount++
       }

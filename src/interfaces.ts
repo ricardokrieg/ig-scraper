@@ -18,12 +18,13 @@ export interface IFollower {
 export interface IProfile {
   biography: string,
   external_url?: string,
-  followers_count: number,
-  following_count: number,
+  followers_count: number, // < 100 -> fail, > 100 good
+  following_count: number, // > 3000 -> fail, < 3000 good
+  // followers/following < 0.??? -> fail, followers > following -> good
   full_name: string,
-  has_clips: boolean,
-  has_channel: boolean,
-  highlight_reel_count: number,
+  has_clips: boolean, // good
+  has_channel: boolean, // good
+  highlight_reel_count: number, // > 0 -> good
   id: string,
   is_business_account: boolean,
   is_professional_account: boolean,
@@ -32,10 +33,9 @@ export interface IProfile {
   is_verified: boolean,
   profile_pic_url: string,
   username: string,
-  post_count: number,
-  posts: IPost[],
-  igtv_count: number,
-  has_profile_picture: boolean,
+  post_count: number, // < 3 -> fail, > 10 -> good
+  posts: IPost[], // ??? -> good
+  igtv_count: number, // > 0 -> good
 }
 
 export enum PostType {

@@ -111,7 +111,6 @@ export default class IGScraper {
       following_count: profileData.edge_follow.count,
       post_count: profileData.edge_owner_to_timeline_media.count,
       igtv_count: profileData.edge_felix_video_timeline.count,
-      has_profile_picture: profileData.profile_pic_url !== profileData.profile_pic_url_hd,
       posts: this.postsFromProfileData(profileData),
     }
 
