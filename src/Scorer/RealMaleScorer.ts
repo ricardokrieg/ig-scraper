@@ -1,10 +1,16 @@
-import {filter, isEmpty} from "lodash"
 import Scorer from "./Scorer"
-import {IFollower, IScoreRequest, IScrapeFollowers} from "../interfaces"
+import {IScoreRequest, IScrapeFollowers} from "../interfaces"
 import IGScraper from "../IGScraper"
 import {MaleFollowerFilterer} from "../Filterer/MaleFollowerFilterer"
 import {NonPrivateFollowerFilterer} from "../Filterer/NonPrivateFollowerFilterer"
 import {NonVerifiedFollowerFilterer} from "../Filterer/NonVerifiedFollowerFilterer"
+import {ProfilePictureFollowerFilterer} from "../Filterer/ProfilePictureFollowerFilterer"
+import {UsernameNameMatchesFollowerFilterer} from "../Filterer/UsernameNameMatchesFollowerFilterer"
+import {NonExternalUrlProfileFilterer} from "../Filterer/NonExternalUrlProfileFilterer"
+import debug from "debug";
+
+
+const log = debug('RealMaleScorer')
 
 export default class RealMaleScorer extends Scorer {
   computeScore(scoreRequest: IScoreRequest): Promise<number> {
@@ -22,6 +28,10 @@ export default class RealMaleScorer extends Scorer {
       await maleFollowerFilterer.prepare()
       const nonPrivateFollowerFilterer = new NonPrivateFollowerFilterer()
       const nonVerifiedFollowerFilterer = new NonVerifiedFollowerFilterer()
+      const profilePictureFollowerFilterer = new ProfilePictureFollowerFilterer()
+      const usernameNameMatchesFollowerFilterer = new UsernameNameMatchesFollowerFilterer()
+
+      const nonExternalUrlProfileFilterer = new NonExternalUrlProfileFilterer()
 
       let originalCount = 0
       let scoreCount = 0
@@ -31,7 +41,20 @@ export default class RealMaleScorer extends Scorer {
 
         if (!nonPrivateFollowerFilterer.check(follower)) continue
         if (!nonVerifiedFollowerFilterer.check(follower)) continue
+        if (!profilePictureFollowerFilterer.check(follower)) continue
+        if (!usernameNameMatchesFollowerFilterer.check(follower)) continue
         if (!maleFollowerFilterer.check(follower)) continue
+
+        let profile
+        try {
+          profile = await igScraper.profile(follower.username)
+        } catch (err) {
+          log(`${follower.full_name} (${follower.username}) Failed to fetch profile`)
+          console.error(err)
+          continue
+        }
+
+        if (!nonExternalUrlProfileFilterer.check(profile)) continue
 
         scoreCount++
       }
