@@ -23,17 +23,22 @@ export default class RealMaleScorer extends Scorer {
       const nonPrivateFollowerFilterer = new NonPrivateFollowerFilterer()
       const nonVerifiedFollowerFilterer = new NonVerifiedFollowerFilterer()
 
-      let followers: IFollower[] = await igScraper.followers(targetFollowers)
-      if (isEmpty(followers)) return resolve(0)
+      let originalCount = 0
+      let scoreCount = 0
 
-      const originalCount = followers.length
+      for await (let follower of igScraper.followers(targetFollowers)) {
+        originalCount++
 
-      followers = filter(followers, (follower) => nonPrivateFollowerFilterer.check(follower))
-      followers = filter(followers, (follower) => nonVerifiedFollowerFilterer.check(follower))
-      followers = filter(followers, (follower) => maleFollowerFilterer.check(follower))
-      const score = followers.length / originalCount
+        if (!nonPrivateFollowerFilterer.check(follower)) continue
+        if (!nonVerifiedFollowerFilterer.check(follower)) continue
+        if (!maleFollowerFilterer.check(follower)) continue
 
-      resolve(score)
+        scoreCount++
+      }
+
+      if (originalCount === 0) return resolve(0)
+
+      resolve(scoreCount / originalCount)
     })
   }
 }

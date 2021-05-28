@@ -22,38 +22,40 @@ export default class IGScraper {
     return Promise.resolve(profile)
   }
 
-  async followers(targetFollowers: IScrapeFollowers): Promise<IFollower[]> {
+  async *followers(targetFollowers: IScrapeFollowers): AsyncGenerator<IFollower, void, void> {
     const authRequester = Requester.auth(targetFollowers.cookies)
 
-    let followers: IFollower[] = []
-    let after
+    let after = undefined
+    let count = 0
 
-    while (followers.length < targetFollowers.limit) {
+    while (count < targetFollowers.limit) {
       const response: IFollowersRequestResponse = await IGScraper.requestFollowers(authRequester, IGScraper.getParams(targetFollowers, after))
 
-      followers = [
-        ...followers,
-        ...map(response.nodes, (node) => {
-          const latestReelMedia = node.reel.latest_reel_media
+      const followers = map(response.nodes, (node) => {
+        const latestReelMedia = node.reel.latest_reel_media
 
-          const follower: IFollower = {
-            ...pick(
-              node,
-              ['id', 'username', 'full_name', 'profile_pic_url', 'is_private', 'is_verified']
-            ),
-            has_reel: latestReelMedia !== 0 && latestReelMedia !== null,
-          }
+        const follower: IFollower = {
+          ...pick(
+            node,
+            ['id', 'username', 'full_name', 'profile_pic_url', 'is_private', 'is_verified']
+          ),
+          has_reel: latestReelMedia !== 0 && latestReelMedia !== null,
+        }
 
-          return follower
-        })
-      ]
+        return follower
+      })
+
+      for (let follower of followers) {
+        count++
+
+        yield follower
+
+        if (count >= targetFollowers.limit) break
+      }
 
       if (!response.has_next_page) break
-
       after = response.end_cursor
     }
-
-    return Promise.resolve(followers.slice(0, targetFollowers.limit))
   }
 
   private static async requestFollowers(requester: Requester, params: IFollowersRequestParams): Promise<IFollowersRequestResponse> {
