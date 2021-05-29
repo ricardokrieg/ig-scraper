@@ -31,7 +31,7 @@ const checkProxy = async (requester: Requester, url: string, proxy: string) => {
 
   // @ts-ignore
   const goodProxies = await Promise.map(
-    proxies,
+    proxies.slice(0, 10),
     (proxy: string) => checkProxy(requester, url, proxy),
     { concurrency: 3 })
 
