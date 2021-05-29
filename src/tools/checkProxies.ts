@@ -1,13 +1,17 @@
 import {compact, map } from "lodash"
 import fs from 'fs'
-import Requester from "../Requester";
+import debug from "debug"
 Promise = require('bluebird')
 
+import Requester from "../Requester"
+
+
+const log = debug('checkProxies')
 
 const checkProxy = async (requester: Requester, url: string, proxy: string) => {
   try {
     const response = await requester.check({ url, timeout: 2000 }, proxy)
-    console.log(`${proxy}: ${response.statusCode}`)
+    log(`${proxy}: ${response.statusCode}`)
   } catch (err) {
     console.error(`${proxy}: ${err.message}`)
     return undefined
@@ -29,8 +33,8 @@ const checkProxy = async (requester: Requester, url: string, proxy: string) => {
     (proxy: string) => checkProxy(requester, url, proxy),
     { concurrency: 3 })
 
-  console.log(`Good proxies:`)
+  log(`Good proxies:`)
   for (let goodProxy of compact(goodProxies)) {
-    console.log(goodProxy)
+    log(goodProxy)
   }
 })()
