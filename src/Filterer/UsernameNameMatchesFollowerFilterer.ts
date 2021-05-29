@@ -5,9 +5,12 @@ import fs from 'fs'
 import { some } from "lodash"
 
 
-const log = debug('UsernameNameMatchesFollowerFilterer')
+const NAME = 'UsernameNameMatches'
+const log = debug('Filterer').extend(NAME)
 
 export class UsernameNameMatchesFollowerFilterer implements IFollowerFilterer {
+  name: string = NAME
+
   check(follower: IFollower): boolean {
     const fullName = follower.full_name
       .normalize('NFD')

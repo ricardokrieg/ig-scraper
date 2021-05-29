@@ -18,13 +18,12 @@ export interface IFollower {
 export interface IProfile {
   biography: string,
   external_url?: string,
-  followers_count: number, // > 100 good
-  following_count: number, // < 3000 good
-  // followers/following < 0.??? -> fail, followers > following -> good
+  followers_count: number,
+  following_count: number,
   full_name: string,
-  has_clips: boolean, // good
-  has_channel: boolean, // good
-  highlight_reel_count: number, // > 0 -> good
+  has_clips: boolean,
+  has_channel: boolean,
+  highlight_reel_count: number,
   id: string,
   is_business_account: boolean,
   is_professional_account: boolean,
@@ -33,9 +32,9 @@ export interface IProfile {
   is_verified: boolean,
   profile_pic_url: string,
   username: string,
-  post_count: number, // > 10 -> good
-  posts: IPost[], // ??? -> good, ??? -> fail
-  igtv_count: number, // > 0 -> good
+  post_count: number,
+  posts: IPost[],
+  igtv_count: number,
 }
 
 export enum PostType {
@@ -92,9 +91,11 @@ export interface IScorer {
 }
 
 export interface IFollowerFilterer {
+  name: string,
   check: (follower: IFollower) => boolean
 }
 
 export interface IProfileFilterer {
+  name: string,
   check: (profile: IProfile) => boolean
 }

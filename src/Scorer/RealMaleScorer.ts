@@ -1,23 +1,96 @@
-import Scorer from "./Scorer"
-import {IScoreRequest, IScrapeFollowers} from "../interfaces"
-import IGScraper from "../IGScraper"
-import {MaleFollowerFilterer} from "../Filterer/MaleFollowerFilterer"
-import {NonPrivateFollowerFilterer} from "../Filterer/NonPrivateFollowerFilterer"
-import {NonVerifiedFollowerFilterer} from "../Filterer/NonVerifiedFollowerFilterer"
-import {ProfilePictureFollowerFilterer} from "../Filterer/ProfilePictureFollowerFilterer"
-import {UsernameNameMatchesFollowerFilterer} from "../Filterer/UsernameNameMatchesFollowerFilterer"
-import {NonExternalUrlProfileFilterer} from "../Filterer/NonExternalUrlProfileFilterer"
-import {NonBusinessProfileFilterer} from "../Filterer/NonBusinessProfileFilterer"
-import {NonProfessionalProfileFilterer} from "../Filterer/NonProfessionalProfileFilterer"
-import {NonJoinedRecentlyProfileFilterer} from "../Filterer/NonJoinedRecentlyProfileFilterer"
-import {HasMinPostCountProfileFilterer} from "../Filterer/HasMinPostCountProfileFilterer"
-import {HasMinFollowersCountProfileFilterer} from "../Filterer/HasMinFollowersCountProfileFilterer"
-import {HasMaxFollowingCountProfileFilterer} from "../Filterer/HasMaxFollowingCountProfileFilterer"
-import {HasMinFollowersFollowingRatioProfileFilterer} from "../Filterer/HasMinFollowersFollowingRatioProfileFilterer"
-import debug from "debug";
+import debug from 'debug'
+Promise = require('bluebird')
+
+import Scorer from './Scorer'
+import IGScraper from '../IGScraper'
+import {
+  IFollower,
+  IFollowerFilterer,
+  IProfileFilterer,
+  IScoreRequest,
+  IScrapeFollowers
+} from '../interfaces'
+import {
+  FakeProfileFilterer,
+  MaleFollowerFilterer,
+  NonBusinessProfileFilterer,
+  NonExternalUrlProfileFilterer,
+  NonJoinedRecentlyProfileFilterer,
+  NonPrivateFollowerFilterer,
+  NonVerifiedFollowerFilterer,
+  ProfilePictureFollowerFilterer,
+  UsernameNameMatchesFollowerFilterer
+} from '../Filterer'
+import fs from "fs";
+import csv from "csv-parser";
 
 
-const log = debug('RealMaleScorer')
+const log = debug('Scorer').extend('RealMaleScorer')
+
+
+interface FollowerFiltererStatus {
+  filterer: IFollowerFilterer,
+  count: number,
+  failed: number,
+}
+
+interface ProfileFiltererStatus {
+  filterer: IProfileFilterer,
+  count: number,
+  failed: number,
+}
+
+class FollowerFilterers {
+  filtererStatus: FollowerFiltererStatus[] = []
+
+  constructor(filterers: IFollowerFilterer[]) {
+    for (let filterer of filterers) {
+      this.filtererStatus.push({
+        filterer,
+        count: 0,
+        failed: 0,
+      })
+    }
+  }
+}
+
+interface IFollowerResult {
+  follower: IFollower,
+  status: boolean,
+}
+
+class ProfileFilterers {
+  filtererStatus: ProfileFiltererStatus[] = []
+
+  constructor(filterers: IProfileFilterer[]) {
+    for (let filterer of filterers) {
+      this.filtererStatus.push({
+        filterer,
+        count: 0,
+        failed: 0,
+      })
+    }
+  }
+}
+
+const prepareMaleNames = async (): Promise<string[]> => {
+  const names: string[] = []
+
+  return new Promise(resolve => {
+    fs.createReadStream('resources/grupos.csv')
+      .pipe(csv())
+      .on('data', (row) => {
+        if (row.classification === 'M' && parseInt(row.frequency_male) > 100) {
+          names.push(row.name)
+        }
+      })
+      .on('end', () => {
+        log(`${names.length} male names`)
+
+        resolve(names)
+      })
+  })
+}
 
 export default class RealMaleScorer extends Scorer {
   computeScore(scoreRequest: IScoreRequest): Promise<number> {
@@ -29,68 +102,101 @@ export default class RealMaleScorer extends Scorer {
     }
 
     return new Promise(async resolve => {
+      const maleNames = await prepareMaleNames()
+      const maleFollowerFilterer = new MaleFollowerFilterer()
+      maleFollowerFilterer.names = maleNames
+
+      const followerFilterers = new FollowerFilterers([
+        maleFollowerFilterer,
+        new NonPrivateFollowerFilterer(),
+        new NonVerifiedFollowerFilterer(),
+        new ProfilePictureFollowerFilterer(),
+        new UsernameNameMatchesFollowerFilterer(),
+      ])
+
+      const profileFilterers = new ProfileFilterers([
+        new NonExternalUrlProfileFilterer(),
+        new NonBusinessProfileFilterer(),
+        // new NonProfessionalProfileFilterer(),
+        new NonJoinedRecentlyProfileFilterer(),
+        // new HasMinPostCountProfileFilterer(),
+        // new IsActiveProfileFilterer(),
+        new FakeProfileFilterer(),
+      ])
+
       const igScraper = new IGScraper()
 
-      const maleFollowerFilterer = new MaleFollowerFilterer()
-      await maleFollowerFilterer.prepare()
-      const nonPrivateFollowerFilterer = new NonPrivateFollowerFilterer()
-      const nonVerifiedFollowerFilterer = new NonVerifiedFollowerFilterer()
-      const profilePictureFollowerFilterer = new ProfilePictureFollowerFilterer()
-      const usernameNameMatchesFollowerFilterer = new UsernameNameMatchesFollowerFilterer()
+      const followersToCheck = []
 
-      const nonExternalUrlProfileFilterer = new NonExternalUrlProfileFilterer()
-      const nonBusinessProfileFilterer = new NonBusinessProfileFilterer()
-      const nonProfessionalProfileFilterer = new NonProfessionalProfileFilterer()
-      const nonJoinedRecentlyProfileFilterer = new NonJoinedRecentlyProfileFilterer()
-      const hasMinPostCountProfileFilterer = new HasMinPostCountProfileFilterer()
-      const hasMinFollowersCountProfileFilterer = new HasMinFollowersCountProfileFilterer()
-      const hasMaxFollowingCountProfileFilterer = new HasMaxFollowingCountProfileFilterer()
-      const hasMinFollowersFollowingRatioProfileFilterer = new HasMinFollowersFollowingRatioProfileFilterer()
+      for await (let follower of igScraper.followers(targetFollowers)) {
+        followersToCheck.push(RealMaleScorer.checkFollower(follower, igScraper, followerFilterers, profileFilterers))
+      }
+
+      const results = await Promise.all(followersToCheck)
 
       let originalCount = 0
       let scoreCount = 0
-      let errorCount = 0
 
-      for await (let follower of igScraper.followers(targetFollowers)) {
+      for (let result of results) {
         originalCount++
 
-        if (!nonPrivateFollowerFilterer.check(follower)) continue
-        if (!nonVerifiedFollowerFilterer.check(follower)) continue
-        if (!profilePictureFollowerFilterer.check(follower)) continue
-        if (!usernameNameMatchesFollowerFilterer.check(follower)) continue
-        if (!maleFollowerFilterer.check(follower)) continue
-
-        let profile
-        try {
-          profile = await igScraper.profile(follower.username)
-        } catch (err) {
-          errorCount++
-
-          if (errorCount > 10) {
-            console.error(`Exiting. Too many errors`)
-            process.exit(1)
-          }
-
-          log(`${follower.full_name} (${follower.username}) Failed to fetch profile`)
-          console.error(err)
-          continue
+        if (result.status) {
+          scoreCount++
         }
-
-        if (!nonExternalUrlProfileFilterer.check(profile)) continue
-        if (!nonBusinessProfileFilterer.check(profile)) continue
-        // if (!nonProfessionalProfileFilterer.check(profile)) continue
-        if (!nonJoinedRecentlyProfileFilterer.check(profile)) continue
-        if (!hasMinPostCountProfileFilterer.check(profile)) continue
-        if (!hasMinFollowersCountProfileFilterer.check(profile)) continue
-        if (!hasMaxFollowingCountProfileFilterer.check(profile)) continue
-        if (!hasMinFollowersFollowingRatioProfileFilterer.check(profile)) continue
-
-        scoreCount++
       }
 
       if (originalCount === 0) return resolve(0)
 
+      for (let filtererStatus of followerFilterers.filtererStatus) {
+        const { filterer, count, failed } = filtererStatus
+
+        log(`${filterer.name}: ${(100 * (failed / count)).toFixed(2)}% failed`)
+      }
+
+      for (let filtererStatus of profileFilterers.filtererStatus) {
+        const { filterer, count, failed } = filtererStatus
+
+        log(`${filterer.name}: ${(100 * (failed / count)).toFixed(2)}% failed`)
+      }
+
       resolve(scoreCount / originalCount)
+    })
+  }
+
+  private static async checkFollower(follower: IFollower, igScraper: IGScraper, followerFilterers: FollowerFilterers, profileFilterers: ProfileFilterers): Promise<IFollowerResult> {
+    let status = true
+
+    for (let filtererStatus of followerFilterers.filtererStatus) {
+      const filterer = filtererStatus.filterer
+
+      filtererStatus.count++
+      if (!filterer.check(follower)) {
+        filtererStatus.failed++
+        status = false
+      }
+    }
+
+    try {
+      const profile = await igScraper.profile(follower.username)
+
+      for (let filtererStatus of profileFilterers.filtererStatus) {
+        const filterer = filtererStatus.filterer
+
+        filtererStatus.count++
+        if (!filterer.check(profile)) {
+          filtererStatus.failed++
+          status = false
+        }
+      }
+    } catch (err) {
+      log(`${follower.full_name} (${follower.username}) Failed to fetch profile`)
+      console.error(err)
+      status = false
+    }
+
+    return Promise.resolve({
+      follower,
+      status,
     })
   }
 }

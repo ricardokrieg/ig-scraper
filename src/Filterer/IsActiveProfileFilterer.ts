@@ -1,16 +1,19 @@
 import {IProfileFilterer, IProfile} from "../interfaces"
 import debug from "debug"
+import {some} from "lodash";
 
 
-const NAME = 'HasMinPostCount'
+const NAME = 'IsActive'
 const log = debug('Filterer').extend(NAME)
-const THRESHOLD = 3
+const THRESHOLD = 30 * 24 * 60 * 60 // 30 days
 
-export class HasMinPostCountProfileFilterer implements IProfileFilterer {
+export class IsActiveProfileFilterer implements IProfileFilterer {
   name: string = NAME
 
   check(profile: IProfile): boolean {
-    if (profile.post_count > THRESHOLD) {
+    const oneMonthAgo = Math.floor(new Date().getTime() / 1000) - THRESHOLD
+
+    if (some(profile.posts, (post) => post.timestamp > oneMonthAgo)) {
       log(`${profile.full_name} (${profile.username}) PASS`)
 
       return true

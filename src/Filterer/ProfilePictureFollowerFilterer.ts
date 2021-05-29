@@ -2,9 +2,12 @@ import {IFollowerFilterer, IFollower} from "../interfaces"
 import debug from "debug"
 
 
-const log = debug('ProfilePictureFollowerFilterer')
+const NAME = 'ProfilePicture'
+const log = debug('Filterer').extend(NAME)
 
 export class ProfilePictureFollowerFilterer implements IFollowerFilterer {
+  name: string = NAME
+
   check(follower: IFollower): boolean {
     if (follower.profile_pic_url.includes('s150x150')) {
       log(`${follower.full_name} (${follower.username}) PASS`)

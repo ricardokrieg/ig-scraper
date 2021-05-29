@@ -10,16 +10,37 @@ import {
   IScrapeFollowers,
   PostType,
 } from './interfaces'
+import {retry} from "@lifeomic/attempt";
+import debug from "debug";
+
+
+const log = debug('IGScraper')
+
+const attemptOptions = {
+  maxAttempts: 100,
+  delay: 3000,
+  factor: 1.2,
+  handleError: (error: any, context: any, options: any) => {
+    if (error.message.includes("Cannot read property '0' of undefined")) {
+      log('Flagged proxy')
+      return
+    }
+
+    log(error)
+    log(`attemptsRemaining: ${context['attemptsRemaining']}`)
+  }
+}
 
 export default class IGScraper {
   async profile(username: string): Promise<IProfile> {
     const guestRequester = Requester.guest()
 
-    const data = await IGScraper.requestProfile(guestRequester, username)
+    return retry(async () => {
+      const data = await IGScraper.requestProfile(guestRequester, username)
+      const profile: IProfile = IGScraper.profileFromData(data)
 
-    const profile: IProfile = IGScraper.profileFromData(data)
-
-    return Promise.resolve(profile)
+      return Promise.resolve(profile)
+    }, attemptOptions)
   }
 
   async *followers(targetFollowers: IScrapeFollowers): AsyncGenerator<IFollower, void, void> {

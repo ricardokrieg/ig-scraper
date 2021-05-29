@@ -5,27 +5,13 @@ import fs from 'fs'
 import { some } from "lodash"
 
 
-const log = debug('MaleFollowerFilterer')
+const NAME = 'Male'
+const log = debug('Filterer').extend(NAME)
 
 export class MaleFollowerFilterer implements IFollowerFilterer {
+  name: string = NAME
+
   names: string[] = []
-
-  async prepare(): Promise<void> {
-    return new Promise(resolve => {
-      fs.createReadStream('resources/grupos.csv')
-        .pipe(csv())
-        .on('data', (row) => {
-          if (row.classification === 'M' && parseInt(row.frequency_male) > 100) {
-            this.names.push(row.name)
-          }
-        })
-        .on('end', () => {
-          log(`${this.names.length} male names`)
-
-          resolve()
-        })
-    })
-  }
 
   check(follower: IFollower): boolean {
     const fullName = follower.full_name

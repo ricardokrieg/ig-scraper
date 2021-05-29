@@ -3,10 +3,30 @@ import {jar} from "request"
 import {retry} from "@lifeomic/attempt"
 import request from "request-promise"
 import {defaultsDeep} from "lodash"
+import debug from "debug"
+
+import ProxyService from "./ProxyService"
+
+
+const log = debug('Requester')
+
+const attemptOptions = {
+  maxAttempts: 100,
+  delay: 3000,
+  factor: 1.2,
+  handleError: (error: any, context: any, options: any) => {
+    if (error.message.includes('tunneling socket could not be established') || error.message.includes('Page Not Found') || error.message.includes('write EPROTO')) {
+      log('Proxy error')
+      return
+    }
+
+    log(error)
+    log(`attemptsRemaining: ${context['attemptsRemaining']}`)
+  }
+}
 
 export default class Requester {
   defaultOptions: any
-  attemptOptions: any
 
   constructor(cookieJar: any = null) {
     const headers = {
@@ -27,21 +47,10 @@ export default class Requester {
       baseUrl: 'https://www.instagram.com',
       jar: cookieJar,
       gzip: true,
-      headers,
+      headers: headers,
       method: 'GET',
       resolveWithFullResponse: true,
-      proxy: 'http://bpqez:fbyJPKdQ@conn4.trs.ai:11033'
-    }
-
-    this.attemptOptions = {
-      maxAttempts: 100,
-      delay: 3000,
-      factor: 1.2,
-      handleError: (error: any, context: any, options: any) => {
-        console.error(error)
-        console.error(context)
-        console.error(options)
-      }
+      timeout: 30000,
     }
   }
 
@@ -62,7 +71,12 @@ export default class Requester {
 
   async send(options: any) {
     return retry(async () => {
-      return request(defaultsDeep({}, options, this.defaultOptions))
-    }, this.attemptOptions)
+      const proxy = ProxyService.shared()
+
+      log(`[${this.defaultOptions['jar'] ? 'Auth' : 'Guest'}] ${options['url']}`)
+      log(`Proxy: ${proxy}`)
+
+      return request(defaultsDeep({ proxy }, options, this.defaultOptions))
+    }, attemptOptions)
   }
 }

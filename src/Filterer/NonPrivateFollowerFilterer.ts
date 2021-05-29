@@ -2,9 +2,12 @@ import {IFollowerFilterer, IFollower} from "../interfaces"
 import debug from "debug"
 
 
-const log = debug('NonPrivateFollowerFilterer')
+const NAME = 'NonPrivate'
+const log = debug('Filterer').extend(NAME)
 
 export class NonPrivateFollowerFilterer implements IFollowerFilterer {
+  name: string = NAME
+
   check(follower: IFollower): boolean {
     if (!follower.is_private) {
       log(`${follower.full_name} (${follower.username}) PASS`)
