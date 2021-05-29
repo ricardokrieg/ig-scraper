@@ -11,13 +11,14 @@ const log = debug('checkProxies')
 const checkProxy = async (requester: Requester, url: string, proxy: string) => {
   try {
     const response = await requester.check({ url, timeout: 2000 }, proxy)
-    log(`${proxy}: ${response.statusCode}`)
+
+    if (response.statusCode === 200) {
+      return proxy
+    }
   } catch (err) {
-    console.error(`${proxy}: ${err.message}`)
-    return undefined
   }
 
-  return proxy
+  return undefined
 }
 
 (async () => {
@@ -29,9 +30,9 @@ const checkProxy = async (requester: Requester, url: string, proxy: string) => {
 
   // @ts-ignore
   const goodProxies = await Promise.map(
-    proxies.slice(0, 10),
+    proxies.slice(0, 100),
     (proxy: string) => checkProxy(requester, url, proxy),
-    { concurrency: 3 })
+    { concurrency: 10 })
 
   log(`Good proxies:`)
   for (let goodProxy of compact(goodProxies)) {
