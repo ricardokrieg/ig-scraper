@@ -6,7 +6,8 @@ Promise = require('bluebird')
 
 const checkProxy = async (requester: Requester, url: string, proxy: string) => {
   try {
-    await requester.check({ url }, proxy)
+    const response = await requester.check({ url, timeout: 2000 }, proxy)
+    console.log(response)
   } catch (err) {
     console.error(err.message)
     return undefined
