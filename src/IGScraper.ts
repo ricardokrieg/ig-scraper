@@ -49,7 +49,7 @@ export default class IGScraper {
     let after = undefined
     let count = 0
 
-    while (count < targetFollowers.limit) {
+    while (count < targetFollowers.limit || targetFollowers.limit < 0) {
       const response: IFollowersRequestResponse = await IGScraper.requestFollowers(authRequester, IGScraper.getParams(targetFollowers, after))
 
       const followers = map(response.nodes, (node) => {
@@ -71,7 +71,7 @@ export default class IGScraper {
 
         yield follower
 
-        if (count >= targetFollowers.limit) break
+        if (count >= targetFollowers.limit && targetFollowers.limit >= 0) break
       }
 
       if (!response.has_next_page) break
@@ -177,7 +177,7 @@ export default class IGScraper {
       variables: {
         id: targetFollowers.id,
         include_reel: true,
-        first: targetFollowers.limit + 1,
+        first: targetFollowers.limit < 0 ? 1000 : targetFollowers.limit + 1,
         after: after
       }
     }
