@@ -7,7 +7,7 @@ Promise = require('bluebird')
 const checkProxy = async (requester: Requester, url: string, proxy: string) => {
   try {
     const response = await requester.check({ url, timeout: 2000 }, proxy)
-    console.log(response)
+    console.log(response.status)
   } catch (err) {
     console.error(err.message)
     return undefined
@@ -22,13 +22,6 @@ const checkProxy = async (requester: Requester, url: string, proxy: string) => {
 
   const allProxies = fs.readFileSync('resources/proxy.txt').toString().split("\n")
   const proxies = map(allProxies, (proxy) => `http://${proxy}`)
-
-  // let promises = []
-  // for (let proxy of proxies) {
-  //   promises.push(checkProxy(requester, url, proxy))
-  // }
-
-  // const goodProxies = await Promise.all(promises)
 
   // @ts-ignore
   const goodProxies = await Promise.map(
