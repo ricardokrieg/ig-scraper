@@ -81,8 +81,7 @@ export default class Requester {
   }
 
   async check(options: any, proxy: string) {
-    log(`[${this.defaultOptions['jar'] ? 'Auth' : 'Guest'}] ${options['url']}`)
-    log(`Proxy: ${proxy}`)
+    log(`Check Proxy: ${proxy} => [${this.defaultOptions['jar'] ? 'Auth' : 'Guest'}] ${options['url']}`)
 
     return request(defaultsDeep({ proxy }, options, this.defaultOptions))
   }
