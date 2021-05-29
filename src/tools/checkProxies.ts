@@ -29,13 +29,16 @@ const checkProxy = async (requester: Requester, url: string, proxy: string) => {
   const proxies = map(allProxies, (proxy) => `http://${proxy}`)
 
   // @ts-ignore
-  const goodProxies = await Promise.map(
+  const result = await Promise.map(
     proxies.slice(0, 100),
     (proxy: string) => checkProxy(requester, url, proxy),
-    { concurrency: 10 })
+    { concurrency: 100 })
 
-  log(`Good proxies:`)
-  for (let goodProxy of compact(goodProxies)) {
+  const goodProxies = compact(result)
+  log(`${goodProxies.length} good proxies:`)
+  for (let goodProxy of goodProxies) {
     log(goodProxy)
   }
+
+  await fs.writeFileSync('resources/good_proxies.txt', goodProxies.join("\n"))
 })()
