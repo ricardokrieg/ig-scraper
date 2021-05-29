@@ -30,11 +30,11 @@ const checkProxy = async (requester: Requester, url: string, proxy: string) => {
 
   // @ts-ignore
   const result = await Promise.map(
-    proxies.slice(0, 100),
+    proxies.slice(0, 300),
     (proxy: string) => checkProxy(requester, url, proxy),
-    { concurrency: 100 })
+    { concurrency: 300 })
 
-  const goodProxies = compact(result)
+  const goodProxies = map(compact(result), (proxy: string) => proxy.replace('http://', ''))
   log(`${goodProxies.length} good proxies:`)
   for (let goodProxy of goodProxies) {
     log(goodProxy)
