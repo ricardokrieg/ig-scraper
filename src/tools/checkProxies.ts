@@ -22,12 +22,18 @@ const checkProxy = async (requester: Requester, url: string, proxy: string) => {
   const allProxies = fs.readFileSync('resources/proxy.txt').toString().split("\n")
   const proxies = map(allProxies, (proxy) => `http://${proxy}`)
 
-  let promises = []
-  for (let proxy of proxies) {
-    promises.push(checkProxy(requester, url, proxy))
-  }
+  // let promises = []
+  // for (let proxy of proxies) {
+  //   promises.push(checkProxy(requester, url, proxy))
+  // }
 
-  const goodProxies = await Promise.all(promises)
+  // const goodProxies = await Promise.all(promises)
+
+  // @ts-ignore
+  const goodProxies = await Promise.map(
+    proxies,
+    (proxy: string) => checkProxy(requester, url, proxy),
+    { concurrency: 3 })
 
   for (let goodProxy of compact(goodProxies)) {
     console.log(goodProxy)
