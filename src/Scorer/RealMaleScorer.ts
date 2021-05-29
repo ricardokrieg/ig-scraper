@@ -23,6 +23,7 @@ import {
 } from '../Filterer'
 import fs from "fs";
 import csv from "csv-parser";
+import {prepareMaleNames} from "../utils";
 
 
 const log = debug('Scorer').extend('RealMaleScorer')
@@ -71,25 +72,6 @@ class ProfileFilterers {
       })
     }
   }
-}
-
-const prepareMaleNames = async (): Promise<string[]> => {
-  const names: string[] = []
-
-  return new Promise(resolve => {
-    fs.createReadStream('resources/grupos.csv')
-      .pipe(csv())
-      .on('data', (row) => {
-        if (row.classification === 'M' && parseInt(row.frequency_male) > 100) {
-          names.push(row.name)
-        }
-      })
-      .on('end', () => {
-        log(`${names.length} male names`)
-
-        resolve(names)
-      })
-  })
 }
 
 export default class RealMaleScorer extends Scorer {

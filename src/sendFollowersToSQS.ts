@@ -18,6 +18,7 @@ const createQueue = async (profile: IProfile): Promise<string> => {
     QueueName: queueName,
     Attributes: {
       'FifoQueue': 'true',
+      'VisibilityTimeout': '300',
     }
   }
 
@@ -33,8 +34,8 @@ const addToQueue = async (queueUrl: string, followers: IFollower[]) => {
     return {
       Id: follower.id,
       MessageBody: JSON.stringify(follower),
-      MessageDeduplicationId: follower.username,
-      MessageGroupId: 'default',
+      MessageDeduplicationId: follower.id,
+      MessageGroupId: follower.id,
     }
   })
 

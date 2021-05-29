@@ -6,6 +6,7 @@
   "scripts": {
     "start": "npx ts-node src/index.ts",
     "sendFollowersToSQS": "npx ts-node src/sendFollowersToSQS.ts",
+    "filterFollowersFromSQS": "npx ts-node src/filterFollowersFromSQS.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
