@@ -1,4 +1,4 @@
-import {compact, map } from "lodash"
+import {compact, map,shuffle} from "lodash"
 import fs from 'fs'
 import debug from "debug"
 Promise = require('bluebird')
@@ -30,9 +30,9 @@ const checkProxy = async (requester: Requester, url: string, proxy: string) => {
 
   // @ts-ignore
   const result = await Promise.map(
-    proxies.slice(0, 300),
+    shuffle(proxies).slice(0, 500),
     (proxy: string) => checkProxy(requester, url, proxy),
-    { concurrency: 300 })
+    { concurrency: 50 })
 
   const goodProxies = map(compact(result), (proxy: string) => proxy.replace('http://', ''))
   log(`${goodProxies.length} good proxies:`)

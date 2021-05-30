@@ -81,7 +81,7 @@ const sendFollowersToSQS = async (profile: IProfile) => {
 }
 
 (async() => {
-  const username = 'lindasbrasileiras20'
+  const username = 'sportmilvolts'
   const igScraper = new IGScraper()
 
   const profile: IProfile = await igScraper.profile(username)

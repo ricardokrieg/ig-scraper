@@ -79,6 +79,7 @@ export interface IScoreRequest {
   profile?: IProfile,
   username?: string,
   limit: number,
+  detailed: boolean,
 }
 
 export interface IScoreResult {

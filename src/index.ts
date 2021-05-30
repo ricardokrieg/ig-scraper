@@ -37,15 +37,13 @@ const debugFakeProfileScore = async (username: string) => {
   fakeProfileFilterer.check(await igScraper.profile(username))
 }
 
-const debugScore = async (username: string, limit: number) => {
+const debugScore = async (username: string, limit: number, detailed: boolean = true) => {
   const scorer = new RealMaleScorer()
-  const result = await scorer.score({ username, limit })
+  const result = await scorer.score({ username, limit, detailed })
 
   console.log(`${(result.score * 100).toFixed(0)}%`)
 }
 
 (async() => {
-  // await debugScore('marciopuxador', 100) // 100 -> 15%, 200 -> 12%, 500 -> x%, 1000 -> x%
-  // await debugScore('tarcilapalomaa', 1000) // 100 -> 5%, 500 -> 12%
-  await debugScore('lindasbrasileiras20', 100)
+  await debugScore('sportmilvolts', 100, false)
 })()

@@ -111,7 +111,7 @@ export default class RealMaleScorer extends Scorer {
       const followersToCheck = []
 
       for await (let follower of igScraper.followers(targetFollowers)) {
-        followersToCheck.push(RealMaleScorer.checkFollower(follower, igScraper, followerFilterers, profileFilterers))
+        followersToCheck.push(RealMaleScorer.checkFollower(follower, igScraper, followerFilterers, profileFilterers, scoreRequest.detailed))
       }
 
       const results = await Promise.all(followersToCheck)
@@ -145,7 +145,7 @@ export default class RealMaleScorer extends Scorer {
     })
   }
 
-  private static async checkFollower(follower: IFollower, igScraper: IGScraper, followerFilterers: FollowerFilterers, profileFilterers: ProfileFilterers): Promise<IFollowerResult> {
+  private static async checkFollower(follower: IFollower, igScraper: IGScraper, followerFilterers: FollowerFilterers, profileFilterers: ProfileFilterers, detailed: boolean): Promise<IFollowerResult> {
     let status = true
 
     for (let filtererStatus of followerFilterers.filtererStatus) {
@@ -155,6 +155,12 @@ export default class RealMaleScorer extends Scorer {
       if (!filterer.check(follower)) {
         filtererStatus.failed++
         status = false
+        if (!detailed) {
+          return Promise.resolve({
+            follower,
+            status,
+          })
+        }
       }
     }
 
@@ -168,6 +174,12 @@ export default class RealMaleScorer extends Scorer {
         if (!filterer.check(profile)) {
           filtererStatus.failed++
           status = false
+          if (!detailed) {
+            return Promise.resolve({
+              follower,
+              status,
+            })
+          }
         }
       }
     } catch (err) {

@@ -96,7 +96,7 @@ const createQueue = async (profile: IProfile): Promise<string> => {
     QueueName: queueName,
     Attributes: {
       'FifoQueue': 'true',
-      'VisibilityTimeout': '300',
+      'VisibilityTimeout': '1800',
     }
   }
 
@@ -121,7 +121,7 @@ const filterFollowersFromSQS = async (profile: IProfile) => {
     promises.push(filterFollower(processor, message, followersQueueUrl, filteredQueueUrl))
     log(`Processing ${promises.length}`)
 
-    if (promises.length > 5) break
+    if (promises.length >= 1000) break
   }
 
   log(`Waiting promises...`)
@@ -131,7 +131,7 @@ const filterFollowersFromSQS = async (profile: IProfile) => {
 }
 
 (async() => {
-  const username = 'lindasbrasileiras20'
+  const username = 'jaine_cassu'
   const igScraper = new IGScraper()
 
   const profile: IProfile = await igScraper.profile(username)
