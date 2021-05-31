@@ -6,27 +6,30 @@ import {defaultsDeep} from "lodash"
 import debug from "debug"
 
 import ProxyService from "./ProxyService"
+import {promiseTimeout} from "./utils";
 
 
 const log = debug('Requester')
 
 const attemptOptions = {
-  maxAttempts: 100,
+  maxAttempts: 10,
   delay: 3000,
   factor: 1.2,
   handleError: (error: any, context: any, options: any) => {
+    log(`attemptsRemaining: ${context['attemptsRemaining']}`)
+
     if (error.message.includes('tunneling socket could not be established') || error.message.includes('Page Not Found') || error.message.includes('write EPROTO')) {
       log('Proxy error')
       return
     }
 
     log(error)
-    log(`attemptsRemaining: ${context['attemptsRemaining']}`)
   }
 }
 
 export default class Requester {
   defaultOptions: any
+  proxy: string = ''
 
   constructor(cookieJar: any = null) {
     const headers = {
@@ -71,18 +74,27 @@ export default class Requester {
 
   async send(options: any) {
     return retry(async () => {
-      const proxy = ProxyService.shared()
+      try {
+        this.proxy = await ProxyService.getOnlineProxy()
 
-      log(`[${this.defaultOptions['jar'] ? 'Auth' : 'Guest'}] ${options['url']}`)
-      log(`Proxy: ${proxy}`)
+        log(`[${this.defaultOptions['jar'] ? 'Auth' : 'Guest'}] ${options['url']}`)
+        log(`Proxy: ${this.proxy}`)
 
-      return request(defaultsDeep({ proxy }, options, this.defaultOptions))
+        const response = await request(defaultsDeep({ proxy: this.proxy }, options, this.defaultOptions))
+        return Promise.resolve(response)
+      } catch (err) {
+        if (err.message.includes('tunneling socket could not be established') || err.message.includes('Page Not Found') || err.message.includes('write EPROTO')) {
+          await ProxyService.notifyBadProxy(this.proxy)
+        }
+
+        throw err
+      }
     }, attemptOptions)
   }
 
   async check(options: any, proxy: string) {
     log(`Check Proxy: ${proxy} => [${this.defaultOptions['jar'] ? 'Auth' : 'Guest'}] ${options['url']}`)
 
-    return request(defaultsDeep({ proxy }, options, this.defaultOptions))
+    return promiseTimeout(options.timeout, request(defaultsDeep({ proxy }, options, this.defaultOptions)))
   }
 }

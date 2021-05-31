@@ -12,22 +12,24 @@ import {
 } from './interfaces'
 import {retry} from "@lifeomic/attempt";
 import debug from "debug";
+import ProxyService from "./ProxyService";
 
 
 const log = debug('IGScraper')
 
 const attemptOptions = {
-  maxAttempts: 100,
+  maxAttempts: 10,
   delay: 3000,
   factor: 1.2,
   handleError: (error: any, context: any, options: any) => {
+    log(`attemptsRemaining: ${context['attemptsRemaining']}`)
+
     if (error.message.includes("Cannot read property '0' of undefined")) {
       log('Flagged proxy')
       return
     }
 
     log(error)
-    log(`attemptsRemaining: ${context['attemptsRemaining']}`)
   }
 }
 
@@ -37,7 +39,16 @@ export default class IGScraper {
 
     return retry(async () => {
       const data = await IGScraper.requestProfile(guestRequester, username)
-      const profile: IProfile = IGScraper.profileFromData(data)
+      let profile: IProfile
+
+      try {
+        profile = IGScraper.profileFromData(data)
+
+      } catch (err) {
+        await ProxyService.notifyBadProxy(guestRequester.proxy)
+
+        throw err
+      }
 
       return Promise.resolve(profile)
     }, attemptOptions)

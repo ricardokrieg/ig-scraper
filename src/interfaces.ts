@@ -100,3 +100,19 @@ export interface IProfileFilterer {
   name: string,
   check: (profile: IProfile) => boolean
 }
+
+export interface IProxyResponse {
+  address: string,
+  check_at: number,
+}
+
+export interface IProxyStatus {
+  address: string,
+  check_at: number,
+  status: boolean,
+}
+
+export interface IProxyRequest {
+  address: string,
+  check_at: number,
+}

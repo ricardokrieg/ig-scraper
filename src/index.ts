@@ -45,5 +45,5 @@ const debugScore = async (username: string, limit: number, detailed: boolean = t
 }
 
 (async() => {
-  await debugScore('sportmilvolts', 100, false)
+  await debugScore('funkerotico', 100, false)
 })()
