@@ -7,6 +7,8 @@ Promise = require('bluebird')
 const AWS = require('aws-sdk')
 
 
+const BATCH = 100
+
 const log = debug('filterFollowersFromSQS')
 
 AWS.config.loadFromPath('./resources/aws_config.json')
@@ -80,11 +82,14 @@ const filterFollower = async (processor: RealMaleProcessor, message: IFollowerMe
   log(`${follower.full_name} (${follower.username}) ${result ? 'PASS' : 'FAIL'}`)
 
   if (result) {
+    log(`Adding ${follower.username} to Filtered Queue`)
     await addToQueue(filteredQueueUrl, follower)
   }
 
+  log(`Removing ${follower.username} from Followers Queue`)
   await deleteMessage(followersQueueUrl, receiptHandle)
 
+  log(`Finished processing ${follower.username}`)
   return Promise.resolve(result)
 }
 
@@ -114,24 +119,29 @@ const filterFollowersFromSQS = async (profile: IProfile) => {
   const processor = new RealMaleProcessor()
   await processor.prepare()
 
-  const promises = []
-  for await (let message of getMessages(followersQueueUrl)) {
-    log(message)
-
-    promises.push(filterFollower(processor, message, followersQueueUrl, filteredQueueUrl))
-    log(`Processing ${promises.length}`)
-
-    if (promises.length >= 1000) break
+  let shouldExit = false
+  while (!shouldExit) {
+    shouldExit = true
+    const promises = []
+    
+    for await (let message of getMessages(followersQueueUrl)) {
+      shouldExit = false
+      
+      promises.push(filterFollower(processor, message, followersQueueUrl, filteredQueueUrl))
+      log(`Processing ${promises.length}`)
+  
+      if (promises.length >= BATCH) break
+    }
+  
+    log(`Waiting promises...`)
+    const results = await Promise.all(promises)
+    log(`Done`)
+    log(`${countBy(results)['true'] || 0} valid followers`)  
   }
-
-  log(`Waiting promises...`)
-  const results = await Promise.all(promises)
-  log(`Done`)
-  log(`${countBy(results)['true']} valid followers`)
 }
 
 (async() => {
-  const username = 'jaine_cassu'
+  const username = 'contoseroticos_me_excita'
   const igScraper = new IGScraper()
 
   const profile: IProfile = await igScraper.profile(username)

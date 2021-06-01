@@ -7,9 +7,7 @@
     "start": "npx ts-node src/index.ts",
     "sendFollowersToSQS": "npx ts-node src/sendFollowersToSQS.ts",
     "filterFollowersFromSQS": "npx ts-node src/filterFollowersFromSQS.ts",
-    "checkProxies": "npx ts-node src/tools/checkProxies.ts",
-    "proxyMonitor": "npx ts-node src/tools/proxyMonitor.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "proxyMonitor": "npx ts-node src/tools/proxyMonitor.ts"
   },
   "repository": {
     "type": "git",

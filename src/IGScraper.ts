@@ -43,7 +43,6 @@ export default class IGScraper {
 
       try {
         profile = IGScraper.profileFromData(data)
-
       } catch (err) {
         await ProxyService.notifyBadProxy(guestRequester.proxy)
 

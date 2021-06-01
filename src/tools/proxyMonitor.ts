@@ -8,6 +8,8 @@ import Requester from "../Requester"
 import {IProxyRequest, IProxyResponse, IProxyStatus} from "../interfaces";
 
 
+const SHARED_PROXY_TABLE = 'SHARED_PROXY'
+const MOBILE_PROXY_TABLE = 'MOBILE_PROXY'
 const BATCH = 20000
 const CONCURRENCY = 300
 
@@ -17,7 +19,41 @@ AWS.config.loadFromPath('./resources/aws_config.json')
 const dynamodb = new AWS.DynamoDB()
 const documentClient = new AWS.DynamoDB.DocumentClient()
 
+const deleteTable = async () => {
+  const params = {
+    TableName: SHARED_PROXY_TABLE
+  }
+
+  try {
+    await dynamodb.deleteTable(params).promise()
+  } catch (err) {
+    log(err.message)
+    return Promise.resolve()
+  }
+}
+
+const createTable = async () => {
+  const params = {
+    TableName: SHARED_PROXY_TABLE,
+    KeySchema: [       
+      { AttributeName: 'address', KeyType: 'HASH' },
+    ],
+    AttributeDefinitions: [       
+      { AttributeName: 'address', AttributeType: 'S' },
+    ],
+    ProvisionedThroughput: {       
+      ReadCapacityUnits: 5,
+      WriteCapacityUnits: 5,
+    },
+  }
+
+  await dynamodb.createTable(params).promise()
+}
+
 const addProxies = async (fileName: string) => {
+  // await deleteTable()
+  // await createTable()
+  
   const proxies = fs.readFileSync(fileName).toString().split("\n")
   const proxiesRequest: IProxyRequest[] = map(proxies, (proxy) => { return { address: `http://${proxy}`, check_at: 0 } })
 
@@ -41,7 +77,7 @@ const updateProxies = async (proxies: IProxyRequest[]) => {
 
     const params = {
       RequestItems: {
-        'PROXY': requestItems
+        [SHARED_PROXY_TABLE]: requestItems
       }
     }
 
@@ -81,7 +117,7 @@ const monitorProxies = async (requester: Requester, url: string) => {
   const timestamp = Math.floor(new Date().getTime() / 1000)
 
   const params = {
-    TableName: 'PROXY',
+    TableName: SHARED_PROXY_TABLE,
     ProjectionExpression: 'address, check_at',
     FilterExpression: 'check_at between :beginTimestamp and :endTimestamp',
     ExpressionAttributeValues: {

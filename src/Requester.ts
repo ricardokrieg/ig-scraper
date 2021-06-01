@@ -18,7 +18,7 @@ const attemptOptions = {
   handleError: (error: any, context: any, options: any) => {
     log(`attemptsRemaining: ${context['attemptsRemaining']}`)
 
-    if (error.message.includes('tunneling socket could not be established') || error.message.includes('Page Not Found') || error.message.includes('write EPROTO')) {
+    if (error.message.includes('tunneling socket could not be established') || error.message.includes('Page Not Found') || error.message.includes('write EPROTO') || error.message.includes('Timed out in')) {
       log('Proxy error')
       return
     }
@@ -75,15 +75,18 @@ export default class Requester {
   async send(options: any) {
     return retry(async () => {
       try {
-        this.proxy = await ProxyService.getOnlineProxy()
+        this.proxy = await ProxyService.shared()
+        // this.proxy = `http://obobw:CPDkGFzX@conn4.trs.ai:18033`
 
         log(`[${this.defaultOptions['jar'] ? 'Auth' : 'Guest'}] ${options['url']}`)
         log(`Proxy: ${this.proxy}`)
 
-        const response = await request(defaultsDeep({ proxy: this.proxy }, options, this.defaultOptions))
+        const response = await promiseTimeout(30000, request(defaultsDeep({ proxy: this.proxy }, options, this.defaultOptions)))
         return Promise.resolve(response)
       } catch (err) {
         if (err.message.includes('tunneling socket could not be established') || err.message.includes('Page Not Found') || err.message.includes('write EPROTO')) {
+          await ProxyService.notifyBadProxy(this.proxy)
+        } else if (err.message.includes('Timed out in')) {
           await ProxyService.notifyBadProxy(this.proxy)
         }
 
