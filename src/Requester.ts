@@ -5,7 +5,7 @@ import request from "request-promise"
 import {defaultsDeep} from "lodash"
 import debug from "debug"
 
-import ProxyService from "./ProxyService"
+// import ProxyService from "./ProxyService"
 import {promiseTimeout} from "./utils";
 
 
@@ -73,26 +73,25 @@ export default class Requester {
   }
 
   async send(options: any) {
-    return retry(async () => {
-      try {
-        this.proxy = await ProxyService.shared()
+    // return retry(async () => {
+    //   try {
+        // this.proxy = await ProxyService.shared()
         // this.proxy = `http://obobw:CPDkGFzX@conn4.trs.ai:18033`
 
-        log(`[${this.defaultOptions['jar'] ? 'Auth' : 'Guest'}] ${options['url']}`)
-        log(`Proxy: ${this.proxy}`)
+        log(`[${this.defaultOptions['jar'] ? 'Auth' : 'Guest'}] ${this.proxy} ${options['url']}`)
 
         const response = await promiseTimeout(30000, request(defaultsDeep({ proxy: this.proxy }, options, this.defaultOptions)))
         return Promise.resolve(response)
-      } catch (err) {
-        if (err.message.includes('tunneling socket could not be established') || err.message.includes('Page Not Found') || err.message.includes('write EPROTO')) {
-          await ProxyService.notifyBadProxy(this.proxy)
-        } else if (err.message.includes('Timed out in')) {
-          await ProxyService.notifyBadProxy(this.proxy)
-        }
-
-        throw err
-      }
-    }, attemptOptions)
+    //   } catch (err) {
+    //     if (err.message.includes('tunneling socket could not be established') || err.message.includes('Page Not Found') || err.message.includes('write EPROTO')) {
+    //       // await ProxyService.notifyBadProxy(this.proxy)
+    //     } else if (err.message.includes('Timed out in')) {
+    //       // await ProxyService.notifyBadProxy(this.proxy)
+    //     }
+    //
+    //     throw err
+    //   }
+    // }, attemptOptions)
   }
 
   async check(options: any, proxy: string) {

@@ -2,13 +2,13 @@ import debug from 'debug'
 Promise = require('bluebird')
 
 import Scorer from './Scorer'
-import IGScraper from '../IGScraper'
 import {
+  FollowerFiltererStatus,
   IFollower,
-  IFollowerFilterer,
+  IFollowerFilterer, IFollowerResult, IProfile,
   IProfileFilterer,
   IScoreRequest,
-  IScrapeFollowers
+  ProfileFiltererStatus
 } from '../interfaces'
 import {
   FakeProfileFilterer,
@@ -21,25 +21,12 @@ import {
   ProfilePictureFollowerFilterer,
   UsernameNameMatchesFollowerFilterer
 } from '../Filterer'
-import fs from "fs";
-import csv from "csv-parser";
-import {prepareMaleNames} from "../utils";
+import {prepareMaleNames} from "../utils"
+import WorkerManager from "../Worker/WorkerManager";
+import { countBy } from 'lodash'
 
 
 const log = debug('Scorer').extend('RealMaleScorer')
-
-
-interface FollowerFiltererStatus {
-  filterer: IFollowerFilterer,
-  count: number,
-  failed: number,
-}
-
-interface ProfileFiltererStatus {
-  filterer: IProfileFilterer,
-  count: number,
-  failed: number,
-}
 
 class FollowerFilterers {
   filtererStatus: FollowerFiltererStatus[] = []
@@ -53,11 +40,6 @@ class FollowerFilterers {
       })
     }
   }
-}
-
-interface IFollowerResult {
-  follower: IFollower,
-  status: boolean,
 }
 
 class ProfileFilterers {
@@ -76,13 +58,6 @@ class ProfileFilterers {
 
 export default class RealMaleScorer extends Scorer {
   computeScore(scoreRequest: IScoreRequest): Promise<number> {
-    const targetFollowers: IScrapeFollowers = {
-      id: scoreRequest.profile!.id,
-      limit: scoreRequest.limit,
-      cookies: `ig_did=B0B787F1-FFC9-4968-9360-49E87C522A2B; ig_nrcb=1; mid=YGCSRwAEAAF5mYEy03FhLhp4Kkwi; shbid=11211; rur=ASH; shbts=1621855643.8523397; csrftoken=3Lv4TTvntYhY7G4Q0zagNwG5PW55Om3r; ds_user_id=47889665346; sessionid=47889665346%3AUnSNqRagUkQELt%3A8; ig_direct_region_hint=ASH`,
-      queryHash: `5aefa9893005572d237da5068082d8d5`,
-    }
-
     return new Promise(async resolve => {
       const maleNames = await prepareMaleNames()
       const maleFollowerFilterer = new MaleFollowerFilterer()
@@ -106,28 +81,73 @@ export default class RealMaleScorer extends Scorer {
         new FakeProfileFilterer(),
       ])
 
-      const igScraper = new IGScraper()
-
       const followersToCheck = []
+      const workerManager = WorkerManager.getInstance()
+      const results: IFollowerResult[] = await workerManager.filterFollowers(
+        this.followers,
+        (follower: IFollower): IFollowerResult => {
+          let status = true
 
-      for await (let follower of igScraper.followers(targetFollowers)) {
-        followersToCheck.push(RealMaleScorer.checkFollower(follower, igScraper, followerFilterers, profileFilterers, scoreRequest.detailed))
-      }
+          for (let filtererStatus of followerFilterers.filtererStatus) {
+            const filterer = filtererStatus.filterer
 
-      const results = await Promise.all(followersToCheck)
+            filtererStatus.count++
+            if (!filterer.check(follower)) {
+              filtererStatus.failed++
+              status = false
+              if (!scoreRequest.detailed) {
+                return {
+                  follower,
+                  status: false,
+                }
+              }
+            }
+          }
 
-      let originalCount = 0
-      let scoreCount = 0
+          return {
+            follower,
+            status,
+          }
+        },
+        (profile: IProfile): IFollowerResult => {
+          let status = true
+          const follower = {
+            username: profile.username,
+            id: profile.id,
+            full_name: profile.full_name,
+            profile_pic_url: profile.profile_pic_url,
+            is_private: profile.is_private,
+            is_verified: profile.is_verified,
+            has_reel: false,
+          }
 
-      for (let result of results) {
-        originalCount++
+          for (let filtererStatus of profileFilterers.filtererStatus) {
+            const filterer = filtererStatus.filterer
 
-        if (result.status) {
-          scoreCount++
-        }
-      }
+            filtererStatus.count++
+            if (!filterer.check(profile)) {
+              filtererStatus.failed++
+              status = false
+              if (!scoreRequest.detailed) {
+                return {
+                  follower,
+                  status: false,
+                }
+              }
+            }
+          }
 
-      if (originalCount === 0) return resolve(0)
+          return {
+            follower,
+            status,
+          }
+        },
+        scoreRequest.detailed
+      )
+
+
+      let originalCount = results.length
+      let scoreCount = countBy(results, (result) => result.status)['true'] || 0
 
       for (let filtererStatus of followerFilterers.filtererStatus) {
         const { filterer, count, failed } = filtererStatus
@@ -141,56 +161,7 @@ export default class RealMaleScorer extends Scorer {
         log(`${filterer.name}: ${(100 * (failed / count)).toFixed(2)}% failed`)
       }
 
-      resolve(scoreCount / originalCount)
-    })
-  }
-
-  private static async checkFollower(follower: IFollower, igScraper: IGScraper, followerFilterers: FollowerFilterers, profileFilterers: ProfileFilterers, detailed: boolean): Promise<IFollowerResult> {
-    let status = true
-
-    for (let filtererStatus of followerFilterers.filtererStatus) {
-      const filterer = filtererStatus.filterer
-
-      filtererStatus.count++
-      if (!filterer.check(follower)) {
-        filtererStatus.failed++
-        status = false
-        if (!detailed) {
-          return Promise.resolve({
-            follower,
-            status,
-          })
-        }
-      }
-    }
-
-    try {
-      const profile = await igScraper.profile(follower.username)
-
-      for (let filtererStatus of profileFilterers.filtererStatus) {
-        const filterer = filtererStatus.filterer
-
-        filtererStatus.count++
-        if (!filterer.check(profile)) {
-          filtererStatus.failed++
-          status = false
-          if (!detailed) {
-            return Promise.resolve({
-              follower,
-              status,
-            })
-          }
-        }
-      }
-    } catch (err) {
-      log(`${follower.full_name} (${follower.username}) Failed to fetch profile`)
-      console.error(err)
-      status = false
-    }
-
-    return Promise.resolve({
-      follower,
-      status,
+      originalCount === 0 ? resolve(0) : resolve(scoreCount / originalCount)
     })
   }
 }

@@ -10,7 +10,7 @@ import {IProxyRequest, IProxyResponse, IProxyStatus} from "../interfaces";
 
 const SHARED_PROXY_TABLE = 'SHARED_PROXY'
 const MOBILE_PROXY_TABLE = 'MOBILE_PROXY'
-const BATCH = 20000
+const BATCH = 1200
 const CONCURRENCY = 300
 
 const log = debug('proxyMonitor')
@@ -35,13 +35,13 @@ const deleteTable = async () => {
 const createTable = async () => {
   const params = {
     TableName: SHARED_PROXY_TABLE,
-    KeySchema: [       
+    KeySchema: [
       { AttributeName: 'address', KeyType: 'HASH' },
     ],
-    AttributeDefinitions: [       
+    AttributeDefinitions: [
       { AttributeName: 'address', AttributeType: 'S' },
     ],
-    ProvisionedThroughput: {       
+    ProvisionedThroughput: {
       ReadCapacityUnits: 5,
       WriteCapacityUnits: 5,
     },
@@ -53,7 +53,7 @@ const createTable = async () => {
 const addProxies = async (fileName: string) => {
   // await deleteTable()
   // await createTable()
-  
+
   const proxies = fs.readFileSync(fileName).toString().split("\n")
   const proxiesRequest: IProxyRequest[] = map(proxies, (proxy) => { return { address: `http://${proxy}`, check_at: 0 } })
 

@@ -5,6 +5,11 @@ export interface IScrapeFollowers {
   queryHash: string,
 }
 
+export interface IFollowersRequest {
+  id: string,
+  limit: number,
+}
+
 export interface IFollower {
   id: string,
   username: string,
@@ -115,4 +120,35 @@ export interface IProxyStatus {
 export interface IProxyRequest {
   address: string,
   check_at: number,
+}
+
+export interface IWorkerManager {
+  getProfile: (username: string) => Promise<IProfile>,
+}
+
+export interface IWorkerJob {
+  getUsername: () => string | undefined,
+}
+
+export interface IProxyService {
+  proxy: () => Promise<string>,
+  reject: (proxy: string) => Promise<void>,
+  return: (proxy: string) => Promise<void>,
+}
+
+export interface IFollowerResult {
+  follower: IFollower,
+  status: boolean,
+}
+
+export interface FollowerFiltererStatus {
+  filterer: IFollowerFilterer,
+  count: number,
+  failed: number,
+}
+
+export interface ProfileFiltererStatus {
+  filterer: IProfileFilterer,
+  count: number,
+  failed: number,
 }

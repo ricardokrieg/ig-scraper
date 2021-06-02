@@ -12,7 +12,8 @@ import {
 } from './interfaces'
 import {retry} from "@lifeomic/attempt";
 import debug from "debug";
-import ProxyService from "./ProxyService";
+import ProxyService from "./Proxy/LocalProxyService";
+import WorkerManager from "./Worker/WorkerManager";
 
 
 const log = debug('IGScraper')
@@ -35,6 +36,8 @@ const attemptOptions = {
 
 export default class IGScraper {
   async profile(username: string): Promise<IProfile> {
+    WorkerManager.getInstance().getProfile(username)
+
     const guestRequester = Requester.guest()
 
     return retry(async () => {
@@ -44,7 +47,7 @@ export default class IGScraper {
       try {
         profile = IGScraper.profileFromData(data)
       } catch (err) {
-        await ProxyService.notifyBadProxy(guestRequester.proxy)
+        // await ProxyService.notifyBadProxy(guestRequester.proxy)
 
         throw err
       }
