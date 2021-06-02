@@ -1,7 +1,7 @@
-import IGScraper from './IGScraper'
-import {IFollower, IProfile, IScrapeFollowers} from './interfaces'
+import {IFollower, IProfile} from '../interfaces'
 import debug from 'debug'
 import { map } from 'lodash'
+import WorkerManager from "../Worker/WorkerManager"
 const AWS = require('aws-sdk')
 
 
@@ -48,19 +48,11 @@ const addToQueue = async (queueUrl: string, followers: IFollower[]) => {
 }
 
 const sendFollowersToSQS = async (profile: IProfile) => {
-  const targetFollowers: IScrapeFollowers = {
-    id: profile.id,
-    limit: -1,
-    cookies: `ig_did=B0B787F1-FFC9-4968-9360-49E87C522A2B; ig_nrcb=1; mid=YGCSRwAEAAF5mYEy03FhLhp4Kkwi; shbid=11211; rur=ASH; shbts=1621855643.8523397; csrftoken=3Lv4TTvntYhY7G4Q0zagNwG5PW55Om3r; ds_user_id=47889665346; sessionid=47889665346%3AUnSNqRagUkQELt%3A8; ig_direct_region_hint=ASH`,
-    queryHash: `5aefa9893005572d237da5068082d8d5`,
-  }
-  const igScraper = new IGScraper()
-
   const queueUrl = await createQueue(profile)
 
   let count = 0
   let batch: IFollower[] = []
-  for await (let follower of igScraper.followers(targetFollowers)) {
+  for await (let follower of WorkerManager.getInstance().getFollowers({ id: profile.id, limit: -1 })) {
     batch.push(follower)
 
     if (batch.length === 10) {
@@ -81,10 +73,9 @@ const sendFollowersToSQS = async (profile: IProfile) => {
 }
 
 (async() => {
-  const username = 'contoseroticos_me_excita'
-  const igScraper = new IGScraper()
+  const [username] = process.argv.slice(2)
 
-  const profile: IProfile = await igScraper.profile(username)
+  const profile: IProfile = await WorkerManager.getInstance().getProfile(username)
 
-  await sendFollowersToSQS(profile)
+  return sendFollowersToSQS(profile)
 })()

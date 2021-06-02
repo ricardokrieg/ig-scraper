@@ -26,9 +26,14 @@ export default class WorkerManager implements IWorkerManager {
     const workerJob = new WorkerJob([username])
     const worker = new ProfileWorker('1', workerJob)
     const [profile] = await worker.run()
-    await worker.finish()
 
-    return Promise.resolve(profile)
+    if (profile) {
+      await worker.finish()
+
+      return Promise.resolve(profile)
+    } else {
+      return Promise.reject(new Error(`Failed to fetch ${username} profile`))
+    }
   }
 
   async *getFollowers(followersRequest: IFollowersRequest): AsyncGenerator<IFollower, number, void> {

@@ -6,8 +6,8 @@
   "scripts": {
     "start": "npx ts-node src/index.ts",
     "score": "npx ts-node src/tools/calculateScore.ts",
-    "sendFollowersToSQS": "npx ts-node src/sendFollowersToSQS.ts",
-    "filterFollowersFromSQS": "npx ts-node src/filterFollowersFromSQS.ts",
+    "sendFollowersToSQS": "npx ts-node src/tools/sendFollowersToSQS.ts",
+    "filterFollowersFromSQS": "npx ts-node src/tools/filterFollowersFromSQS.ts",
     "proxyMonitor": "npx ts-node src/tools/proxyMonitor.ts"
   },
   "repository": {
