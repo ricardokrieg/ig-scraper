@@ -1,4 +1,4 @@
-import {IPost, IProfile, IProxyService, IWorkerJob, PostType} from "../interfaces"
+import {IPost, IProfile, IProxyService, PostType} from "../interfaces"
 import Requester from "../Requester"
 import {retry} from "@lifeomic/attempt"
 import {isEmpty, map, pick} from "lodash"
@@ -26,16 +26,16 @@ const attemptOptions = {
 
 export default class ProfileWorker {
   id: string
-  job: IWorkerJob
+  getUsername: () => string | undefined
 
   proxyService: IProxyService
   requester: Requester
   proxy: string = ''
   log: any
 
-  constructor(id: string, job: IWorkerJob) {
+  constructor(id: string, getUsername: () => string | undefined) {
     this.id = id
-    this.job = job
+    this.getUsername = getUsername
 
     this.proxyService = SharedProxyService.getInstance()
     this.requester = Requester.guest()
@@ -61,7 +61,7 @@ export default class ProfileWorker {
 
     this.log(`Getting usernames from job...`)
 
-    while (username = this.job.getUsername()) {
+    while (username = this.getUsername()) {
       this.log(`Username: ${username}`)
       try {
         const profile = await retry(async () => {
@@ -95,12 +95,13 @@ export default class ProfileWorker {
             return Promise.reject(new Error(`Flagged proxy ${this.proxy} for profile ${username}`))
           }
 
+          this.log(`Processed ${username}`)
           return Promise.resolve(profile)
         }, attemptOptions)
 
         profiles.push(profile)
       } catch (err) {
-        log(`Failed to fetch ${username} after 10 tries`)
+        this.log(`Failed to fetch ${username} after 10 tries`)
       }
     }
 

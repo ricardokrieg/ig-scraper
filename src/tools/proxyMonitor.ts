@@ -85,6 +85,54 @@ const updateProxies = async (proxies: IProxyRequest[]) => {
   }
 }
 
+const loadProxies = async (): Promise<IProxyRequest[]> => {
+  log('Loading proxies...')
+
+  const params = {
+    TableName: SHARED_PROXY_TABLE,
+    ProjectionExpression: 'address, check_at',
+    FilterExpression: 'check_at = :timestamp',
+    ExpressionAttributeValues: {
+      ':timestamp': -1,
+    },
+  }
+
+  const proxies: IProxyRequest[] = (await documentClient.scan(params).promise()).Items
+
+  log(`Loaded ${proxies.length} proxies`)
+
+  return Promise.resolve(proxies)
+}
+
+const flushProxies = async () => {
+  log(`Flushing proxies...`)
+
+  const proxies: IProxyRequest[] = await loadProxies()
+
+  for (let chunkProxies of chunk(proxies, 25)) {
+    log(`Updating ${chunkProxies.length} proxies...`)
+
+    const requestItems = map(chunkProxies, (proxy) => {
+      return {
+        PutRequest: {
+          Item: {
+            address: { 'S': proxy.address },
+            check_at: { 'N': '0' },
+          }
+        }
+      }
+    })
+
+    const params = {
+      RequestItems: {
+        [SHARED_PROXY_TABLE]: requestItems
+      }
+    }
+
+    await dynamodb.batchWriteItem(params).promise()
+  }
+}
+
 const getCheckAtTimestamp = (): number => {
   const timestamp = Math.floor(new Date().getTime() / 1000)
 
@@ -113,8 +161,12 @@ const checkProxy = async (requester: Requester, url: string, proxy: string): Pro
   })
 }
 
-const monitorProxies = async (requester: Requester, url: string) => {
+const monitorProxies = async (requester: Requester, url: string, flush: boolean) => {
   const timestamp = Math.floor(new Date().getTime() / 1000)
+
+  if (flush) {
+    await flushProxies()
+  }
 
   const params = {
     TableName: SHARED_PROXY_TABLE,
@@ -140,11 +192,13 @@ const monitorProxies = async (requester: Requester, url: string) => {
 }
 
 (async () => {
+  const [flush] = process.argv.slice(2)
+
   const url = '/lindasbrasileiras20/'
   const requester = Requester.guest()
 
   // await addProxies('resources/proxy.txt')
-  await monitorProxies(requester, url)
+  await monitorProxies(requester, url, flush === 'true')
 
   process.exit(0)
 })()

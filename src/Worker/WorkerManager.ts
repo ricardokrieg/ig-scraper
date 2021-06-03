@@ -3,10 +3,20 @@ import ProfileWorker from "./ProfileWorker"
 import FollowersWorker from "./FollowersWorker";
 import debug from "debug";
 import WorkerJob from "./WorkerJob";
-import {filter, map } from "lodash";
+import {filter, map, uniq } from "lodash";
 
 
 const log = debug('WorkerManager')
+
+const sleep = (ms: number, maxMs?: number) => {
+  if (maxMs) {
+    ms = Math.floor(Math.random() * (maxMs - ms + 1) + ms)
+  }
+
+  log(`Sleeping ${Math.round(ms / 1000)}s`)
+
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
 
 export default class WorkerManager implements IWorkerManager {
   private static instance: WorkerManager
@@ -24,7 +34,7 @@ export default class WorkerManager implements IWorkerManager {
 
   async getProfile(username: string): Promise<IProfile> {
     const workerJob = new WorkerJob([username])
-    const worker = new ProfileWorker('1', workerJob)
+    const worker = new ProfileWorker('1', () => workerJob.getUsername())
     const [profile] = await worker.run()
 
     if (profile) {
@@ -60,12 +70,13 @@ export default class WorkerManager implements IWorkerManager {
       }
     }
 
-    const workerJob = new WorkerJob(map(validFollowers, 'username'))
+    const workerJob = new WorkerJob(uniq(map(validFollowers, 'username')))
     const threads = []
     for (let i = 1; i <= nWorkers; i++) {
-      const worker = new ProfileWorker(i.toString(), workerJob)
+      const worker = new ProfileWorker(i.toString(), () => workerJob.getUsername())
 
       threads.push(worker.run())
+      await sleep(2000)
     }
     const workerProfiles = await Promise.all(threads)
 
@@ -75,9 +86,7 @@ export default class WorkerManager implements IWorkerManager {
 
       for (let profile of profiles) {
         const result = await profileFilter(profile)
-        if (result.status) {
-          results.push(result)
-        }
+        results.push(result)
       }
     }
 

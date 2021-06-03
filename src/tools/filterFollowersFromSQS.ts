@@ -7,8 +7,6 @@ Promise = require('bluebird')
 const AWS = require('aws-sdk')
 
 
-const BATCH = 100
-
 const log = debug('filterFollowersFromSQS')
 
 AWS.config.loadFromPath('./resources/aws_config.json')
@@ -94,7 +92,7 @@ const createQueue = async (profile: IProfile): Promise<string> => {
   return queueUrl
 }
 
-const filterFollowersFromSQS = async (profile: IProfile) => {
+const filterFollowersFromSQS = async (profile: IProfile, nWorkers: number, batch: number) => {
   const followersQueueUrl = getQueueUrl(profile)
   const filteredQueueUrl = await createQueue(profile)
 
@@ -115,13 +113,13 @@ const filterFollowersFromSQS = async (profile: IProfile) => {
       messages.push(message)
       receiptHandles[message.follower.id] = message.receiptHandle
 
-      if (messages.length >= BATCH) break
+      if (messages.length >= batch) break
     }
 
     log(`Got ${messages.length} messages`)
 
     const results = await workerManager.filterFollowers(
-      10,
+      nWorkers,
       map(messages, 'follower'),
       (follower: IFollower): Promise<IFollowerResult> => {
         return Promise.resolve({
@@ -154,7 +152,6 @@ const filterFollowersFromSQS = async (profile: IProfile) => {
           }
         }
 
-        log(`Adding ${follower.username} to Filtered Queue`)
         await addToQueue(filteredQueueUrl, follower)
 
         return Promise.resolve({
@@ -164,27 +161,16 @@ const filterFollowersFromSQS = async (profile: IProfile) => {
       }
     )
 
-    log(`Processed ${results.length} profiles`)
-
-    // for (let result of results) {
-    //   if (result.status) {
-    //     log(`Adding ${result.follower.username} to Filtered Queue`)
-    //     await addToQueue(filteredQueueUrl, result.follower)
-    //   }
-    //
-    //   log(`Removing ${result.follower.username} from Followers Queue`)
-    //   await deleteMessage(followersQueueUrl, receiptHandles[result.follower.id])
-    // }
-
     log(`Done`)
-    log(`${countBy(results)['true'] || 0} followers added to Filtered Queue`)
+    log(`Processed ${results.length} profiles`)
+    log(`${countBy(results, 'status')['true'] || 0} followers added to Filtered Queue`)
   }
 }
 
 (async() => {
-  const [username] = process.argv.slice(2)
+  const [username, nWorkers, batch] = process.argv.slice(2)
 
   const profile: IProfile = await WorkerManager.getInstance().getProfile(username)
 
-  return filterFollowersFromSQS(profile)
+  return filterFollowersFromSQS(profile, nWorkers ? parseInt(nWorkers) : 4, batch ? parseInt(batch) : 100)
 })()
