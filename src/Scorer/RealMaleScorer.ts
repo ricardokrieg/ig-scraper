@@ -84,8 +84,9 @@ export default class RealMaleScorer extends Scorer {
       const followersToCheck = []
       const workerManager = WorkerManager.getInstance()
       const results: IFollowerResult[] = await workerManager.filterFollowers(
+        4,
         this.followers,
-        (follower: IFollower): IFollowerResult => {
+        (follower: IFollower): Promise<IFollowerResult> => {
           let status = true
 
           for (let filtererStatus of followerFilterers.filtererStatus) {
@@ -96,20 +97,20 @@ export default class RealMaleScorer extends Scorer {
               filtererStatus.failed++
               status = false
               if (!scoreRequest.detailed) {
-                return {
+                return Promise.resolve({
                   follower,
                   status: false,
-                }
+                })
               }
             }
           }
 
-          return {
+          return Promise.resolve({
             follower,
             status,
-          }
+          })
         },
-        (profile: IProfile): IFollowerResult => {
+        (profile: IProfile): Promise<IFollowerResult> => {
           let status = true
           const follower = {
             username: profile.username,
@@ -129,22 +130,21 @@ export default class RealMaleScorer extends Scorer {
               filtererStatus.failed++
               status = false
               if (!scoreRequest.detailed) {
-                return {
+                return Promise.resolve({
                   follower,
                   status: false,
-                }
+                })
               }
             }
           }
 
-          return {
+          return Promise.resolve({
             follower,
             status,
-          }
+          })
         },
         scoreRequest.detailed
       )
-
 
       let originalCount = results.length
       let scoreCount = countBy(results, (result) => result.status)['true'] || 0

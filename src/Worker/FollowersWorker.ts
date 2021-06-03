@@ -49,13 +49,12 @@ export default class FollowersWorker {
 
   async *run(followersRequest: IFollowersRequest): AsyncGenerator<IFollower, void, void> {
     const queryHash = `5aefa9893005572d237da5068082d8d5`
-    let after = undefined
     let count = 0
 
     while (count < followersRequest.limit || followersRequest.limit < 0) {
       const response: IFollowersRequestResponse = await this.requestFollowers(
         this.requester,
-        FollowersWorker.getParams(followersRequest, queryHash, after)
+        FollowersWorker.getParams(followersRequest, queryHash, followersRequest.after)
       )
 
       const followers = map(response.nodes, (node) => {
@@ -81,7 +80,8 @@ export default class FollowersWorker {
       }
 
       if (!response.has_next_page) break
-      after = response.end_cursor
+      followersRequest.after = response.end_cursor
+      log(`After: ${followersRequest.after}`)
     }
   }
 

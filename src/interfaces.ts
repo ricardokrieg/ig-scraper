@@ -8,6 +8,7 @@ export interface IScrapeFollowers {
 export interface IFollowersRequest {
   id: string,
   limit: number,
+  after?: string,
 }
 
 export interface IFollower {

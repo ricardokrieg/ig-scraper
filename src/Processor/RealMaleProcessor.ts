@@ -1,7 +1,6 @@
 import debug from 'debug'
 Promise = require('bluebird')
 
-import IGScraper from '../IGScraper'
 import {
   IFollower,
   IFollowerFilterer,
@@ -24,7 +23,6 @@ import {prepareMaleNames} from "../utils"
 const log = debug('Processor').extend('RealMaleProcessor')
 
 export default class RealMaleProcessor {
-  igScraper: IGScraper = new IGScraper()
   followerFilterers: IFollowerFilterer[] = []
   profileFilterers: IProfileFilterer[] = []
 
@@ -57,20 +55,20 @@ export default class RealMaleProcessor {
       }
     }
 
-    try {
-      const profile = await this.igScraper.profile(follower.username)
-
-      for (let filterer of this.profileFilterers) {
-        if (!filterer.check(profile)) {
-          log(`${follower.full_name} (${follower.username}) FAIL ${filterer.name}`)
-          return Promise.resolve(false)
-        }
-      }
-    } catch (err) {
-      log(`${follower.full_name} (${follower.username}) Failed to fetch profile`)
-      console.error(err)
-      return Promise.resolve(false)
-    }
+    // try {
+    //   const profile = await this.igScraper.profile(follower.username)
+    //
+    //   for (let filterer of this.profileFilterers) {
+    //     if (!filterer.check(profile)) {
+    //       log(`${follower.full_name} (${follower.username}) FAIL ${filterer.name}`)
+    //       return Promise.resolve(false)
+    //     }
+    //   }
+    // } catch (err) {
+    //   log(`${follower.full_name} (${follower.username}) Failed to fetch profile`)
+    //   console.error(err)
+    //   return Promise.resolve(false)
+    // }
 
     log(`${follower.full_name} (${follower.username}) PASS`)
     return Promise.resolve(true)

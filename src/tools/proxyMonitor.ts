@@ -10,7 +10,7 @@ import {IProxyRequest, IProxyResponse, IProxyStatus} from "../interfaces";
 
 const SHARED_PROXY_TABLE = 'SHARED_PROXY'
 const MOBILE_PROXY_TABLE = 'MOBILE_PROXY'
-const BATCH = 1200
+const BATCH = 6000
 const CONCURRENCY = 300
 
 const log = debug('proxyMonitor')

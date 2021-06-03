@@ -49,33 +49,36 @@ export default class WorkerManager implements IWorkerManager {
     return total
   }
 
-  async filterFollowers(followers: IFollower[], followerFilter: (follower: IFollower) => IFollowerResult, profileFilter: (profile: IProfile) => IFollowerResult, detailed: boolean): Promise<IFollowerResult[]> {
+  async filterFollowers(nWorkers: number, followers: IFollower[], followerFilter: (follower: IFollower) => Promise<IFollowerResult>, profileFilter: (profile: IProfile) => Promise<IFollowerResult>, detailed: boolean = false): Promise<IFollowerResult[]> {
+    const validFollowers = []
     if (!detailed) {
-      followers = filter(followers, (follower) => followerFilter(follower).status)
+      for (let follower of followers) {
+        const result = await followerFilter(follower)
+        if (!result.status) continue
+
+        validFollowers.push(follower)
+      }
     }
 
-    const workerJob = new WorkerJob(map(followers, 'username'))
-    const worker1 = new ProfileWorker('1', workerJob)
-    const worker2 = new ProfileWorker('2', workerJob)
-    const worker3 = new ProfileWorker('3', workerJob)
-    const worker4 = new ProfileWorker('4', workerJob)
+    const workerJob = new WorkerJob(map(validFollowers, 'username'))
+    const threads = []
+    for (let i = 1; i <= nWorkers; i++) {
+      const worker = new ProfileWorker(i.toString(), workerJob)
 
-    let threads = [
-      worker1.run(),
-      worker2.run(),
-      worker3.run(),
-      worker4.run(),
-    ]
+      threads.push(worker.run())
+    }
     const workerProfiles = await Promise.all(threads)
 
     let results: IFollowerResult[] = []
     for (let profiles of workerProfiles) {
       log(`Filtering ${profiles.length} profiles`)
 
-      results = [
-        ...results,
-        ...map(profiles, profileFilter),
-      ]
+      for (let profile of profiles) {
+        const result = await profileFilter(profile)
+        if (result.status) {
+          results.push(result)
+        }
+      }
     }
 
     return Promise.resolve(results)

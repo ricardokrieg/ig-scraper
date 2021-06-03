@@ -1,8 +1,8 @@
-import IGScraper from './IGScraper'
-import {IFollower, IProfile} from './interfaces'
+import {IFollower, IFollowerResult, IProfile} from '../interfaces'
 import debug from 'debug'
 import {countBy, isEmpty, map} from 'lodash'
-import RealMaleProcessor from "./Processor/RealMaleProcessor";
+import RealMaleProcessor from "../Processor/RealMaleProcessor"
+import WorkerManager from "../Worker/WorkerManager"
 Promise = require('bluebird')
 const AWS = require('aws-sdk')
 
@@ -75,24 +75,6 @@ const addToQueue = async (queueUrl: string, follower: IFollower) => {
   await sqs.sendMessage(params).promise()
 }
 
-const filterFollower = async (processor: RealMaleProcessor, message: IFollowerMessage, followersQueueUrl: string, filteredQueueUrl: string): Promise<boolean> => {
-  const {follower, receiptHandle} = message
-  const result = await processor.process(follower)
-
-  log(`${follower.full_name} (${follower.username}) ${result ? 'PASS' : 'FAIL'}`)
-
-  if (result) {
-    log(`Adding ${follower.username} to Filtered Queue`)
-    await addToQueue(filteredQueueUrl, follower)
-  }
-
-  log(`Removing ${follower.username} from Followers Queue`)
-  await deleteMessage(followersQueueUrl, receiptHandle)
-
-  log(`Finished processing ${follower.username}`)
-  return Promise.resolve(result)
-}
-
 const createQueue = async (profile: IProfile): Promise<string> => {
   const queueName = `${profile.id}_filtered.fifo`
   const queueUrl = `https://sqs.us-east-1.amazonaws.com/196763078229/${queueName}`
@@ -116,35 +98,93 @@ const filterFollowersFromSQS = async (profile: IProfile) => {
   const followersQueueUrl = getQueueUrl(profile)
   const filteredQueueUrl = await createQueue(profile)
 
+  const workerManager = WorkerManager.getInstance()
+
   const processor = new RealMaleProcessor()
   await processor.prepare()
 
-  let shouldExit = false
-  while (!shouldExit) {
-    shouldExit = true
-    const promises = []
-    
+  let gotMessages = true
+  let messages = []
+  let receiptHandles: any = {}
+
+  while (gotMessages) {
+    gotMessages = false
+
     for await (let message of getMessages(followersQueueUrl)) {
-      shouldExit = false
-      
-      promises.push(filterFollower(processor, message, followersQueueUrl, filteredQueueUrl))
-      log(`Processing ${promises.length}`)
-  
-      if (promises.length >= BATCH) break
+      gotMessages = true
+      messages.push(message)
+      receiptHandles[message.follower.id] = message.receiptHandle
+
+      if (messages.length >= BATCH) break
     }
-  
-    log(`Waiting promises...`)
-    const results = await Promise.all(promises)
+
+    log(`Got ${messages.length} messages`)
+
+    const results = await workerManager.filterFollowers(
+      10,
+      map(messages, 'follower'),
+      (follower: IFollower): Promise<IFollowerResult> => {
+        return Promise.resolve({
+          follower,
+          status: true,
+        })
+      },
+      async (profile: IProfile): Promise<IFollowerResult> => {
+        const follower = {
+          username: profile.username,
+          id: profile.id,
+          full_name: profile.full_name,
+          profile_pic_url: profile.profile_pic_url,
+          is_private: profile.is_private,
+          is_verified: profile.is_verified,
+          has_reel: false,
+        }
+
+        log(`Removing ${follower.username} from Followers Queue`)
+        await deleteMessage(followersQueueUrl, receiptHandles[follower.id])
+
+        for (let filterer of processor.profileFilterers) {
+          if (!filterer.check(profile)) {
+            log(`${follower.full_name} (${follower.username}) FAIL ${filterer.name}`)
+
+            return Promise.resolve({
+              follower,
+              status: false,
+            })
+          }
+        }
+
+        log(`Adding ${follower.username} to Filtered Queue`)
+        await addToQueue(filteredQueueUrl, follower)
+
+        return Promise.resolve({
+          follower,
+          status: true,
+        })
+      }
+    )
+
+    log(`Processed ${results.length} profiles`)
+
+    // for (let result of results) {
+    //   if (result.status) {
+    //     log(`Adding ${result.follower.username} to Filtered Queue`)
+    //     await addToQueue(filteredQueueUrl, result.follower)
+    //   }
+    //
+    //   log(`Removing ${result.follower.username} from Followers Queue`)
+    //   await deleteMessage(followersQueueUrl, receiptHandles[result.follower.id])
+    // }
+
     log(`Done`)
-    log(`${countBy(results)['true'] || 0} valid followers`)  
+    log(`${countBy(results)['true'] || 0} followers added to Filtered Queue`)
   }
 }
 
 (async() => {
-  const username = 'contoseroticos_me_excita'
-  const igScraper = new IGScraper()
+  const [username] = process.argv.slice(2)
 
-  const profile: IProfile = await igScraper.profile(username)
+  const profile: IProfile = await WorkerManager.getInstance().getProfile(username)
 
-  await filterFollowersFromSQS(profile)
+  return filterFollowersFromSQS(profile)
 })()
