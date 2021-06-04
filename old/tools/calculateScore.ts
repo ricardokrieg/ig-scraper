@@ -36,7 +36,7 @@ const log = debug('calculateScore')
 //
 // const debugFakeProfileScore = async (username: string) => {
 //   const igScraper = new IGScraper()
-//   const fakeProfileFilterer = new FakeProfileFilterer()
+//   const fakeProfileFilterer = new FakeProfileFilter()
 //
 //   fakeProfileFilterer.check(await igScraper.profile(username))
 // }

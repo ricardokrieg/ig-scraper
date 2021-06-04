@@ -3,13 +3,14 @@ import {IFollowersJob, IJob, IJobRequest, IJobStore} from "../Job/interfaces"
 import LocalProxyService from "../Proxy/LocalProxyService"
 import {IFollowersScraper, IFollowersScrapeRequest} from "../Scraper/interfaces"
 import FollowersScraper from "../Scraper/FollowersScraper"
-import {IFollower} from "../interfaces"
+import {IFollowersProcessor} from "../Processor/interfaces"
 
 
 export default class FollowersWorker extends BaseWorker {
   private readonly scraper: IFollowersScraper
+  private readonly processor: IFollowersProcessor
 
-  constructor(id: string, jobStore: IJobStore, jobRequest: IJobRequest) {
+  constructor(id: string, jobStore: IJobStore, jobRequest: IJobRequest, processor: IFollowersProcessor) {
     super(
       id,
       'FollowersWorker',
@@ -19,6 +20,7 @@ export default class FollowersWorker extends BaseWorker {
     )
 
     this.scraper = FollowersScraper.getInstance()
+    this.processor = processor
   }
 
   async process(job: IFollowersJob): Promise<void> {
@@ -28,8 +30,11 @@ export default class FollowersWorker extends BaseWorker {
       proxy: this.proxy!,
     }
 
-    const followers: IFollower[] = await this.scraper.scrape(followersScrapeRequest)
-    this.log(`Got ${followers.length} followers`)
+    for await (let followers of this.scraper.scrape(followersScrapeRequest)) {
+      this.log(`Got ${followers.length} followers`)
+
+      await this.processor.process(followers)
+    }
   }
 
   async getJob(): Promise<IJob> {

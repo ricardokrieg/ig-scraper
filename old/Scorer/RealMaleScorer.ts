@@ -74,10 +74,10 @@ export default class RealMaleScorer extends Scorer {
       const profileFilterers = new ProfileFilterers([
         new NonExternalUrlProfileFilterer(),
         new NonBusinessProfileFilterer(),
-        // new NonProfessionalProfileFilterer(),
+        // new NonProfessionalProfileFilter(),
         new NonJoinedRecentlyProfileFilterer(),
-        // new HasMinPostCountProfileFilterer(),
-        // new IsActiveProfileFilterer(),
+        // new HasMinPostCountProfileFilter(),
+        // new IsActiveProfileFilter(),
         new FakeProfileFilterer(),
       ])
 

@@ -49,9 +49,9 @@ const addFollowersJob = async (jobStore: JobStore, queueUrl: string, jobMessage:
   const followersJobsQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_FollowersJobs.fifo'
   const emptyJobsQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_Empty.fifo'
 
-  // await getProfileJob(jobStore, profileJobsQueueUrl)
-  // await getFollowersJob(jobStore, followersJobsQueueUrl)
-  // await getEmptyJob(jobStore, emptyJobsQueueUrl)
+  await getProfileJob(jobStore, profileJobsQueueUrl)
+  await getFollowersJob(jobStore, followersJobsQueueUrl)
+  await getEmptyJob(jobStore, emptyJobsQueueUrl)
 
   await addProfileJob(jobStore, profileJobsQueueUrl, { username: 'lindasbrasileiras20' })
   await addFollowersJob(jobStore, followersJobsQueueUrl, { id: '46914837090' })
