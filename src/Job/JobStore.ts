@@ -7,7 +7,7 @@ import {
   IFollowersJobMessage,
   IJob,
   IJobRequest,
-  IJobStore,
+  IJobStore, IMessage,
   IProfileJob,
   IProfileJobMessage
 } from "./interfaces"
@@ -16,20 +16,19 @@ import {
 AWS.config.loadFromPath('./resources/aws_config.json')
 const sqs = new AWS.SQS()
 
-const log = debug('JobStore')
-
 const MAX_TRIES = 3
 
 
-interface IMessage {
-  body: any,
-  receiptHandle: string,
-}
-
 export default class JobStore implements IJobStore {
-  async getProfileJob(jobRequest: IJobRequest): Promise<IProfileJob | undefined> {
+  private readonly log: any
+
+  constructor() {
+    this.log = debug('JobStore')
+  }
+
+  async getProfileJob(jobRequest: IJobRequest): Promise<IProfileJob> {
     const message = await this.getMessage(jobRequest)
-    const body = message.body as IProfileJobMessage
+    const body = JSON.parse(message.body) as IProfileJobMessage
 
     const {username} = body
 
@@ -39,9 +38,9 @@ export default class JobStore implements IJobStore {
     } as IProfileJob)
   }
 
-  async getFollowersJob(jobRequest: IJobRequest): Promise<IFollowersJob | undefined> {
+  async getFollowersJob(jobRequest: IJobRequest): Promise<IFollowersJob> {
     const message = await this.getMessage(jobRequest)
-    const body = message.body as IFollowersJobMessage
+    const body = JSON.parse(message.body) as IFollowersJobMessage
 
     const {username, after, limit} = body
 
@@ -72,7 +71,7 @@ export default class JobStore implements IJobStore {
       const response = await sqs.receiveMessage(params).promise()
 
       if (isEmpty(response['Messages'])) {
-        log(`No messages (${MAX_TRIES - i} left)`)
+        this.log(`No messages (${MAX_TRIES - i} left)`)
 
         continue
       }

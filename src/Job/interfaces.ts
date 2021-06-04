@@ -25,7 +25,13 @@ export interface IJobRequest {
   queueUrl: string,
 }
 
+export interface IMessage {
+  body: any,
+  receiptHandle: string,
+}
+
 export interface IJobStore {
   getProfileJob: (jobRequest: IJobRequest) => Promise<IProfileJob | undefined>,
   getFollowersJob: (jobRequest: IJobRequest) => Promise<IFollowersJob | undefined>,
+  removeJob: (jobRequest: IJobRequest, job: IJob) => Promise<void>,
 }
