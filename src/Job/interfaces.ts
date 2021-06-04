@@ -1,14 +1,14 @@
 export interface IJob {
   receiptHandle: string,
-  username: string,
 }
 
 export interface IProfileJob extends IJob {
+  username: string,
 }
 
 export interface IFollowersJob extends IJob {
+  id: string,
   after?: string,
-  limit?: number,
 }
 
 export interface IProfileJobMessage {
@@ -16,9 +16,8 @@ export interface IProfileJobMessage {
 }
 
 export interface IFollowersJobMessage {
-  username: string,
+  id: string,
   after?: string,
-  limit?: number,
 }
 
 export interface IJobRequest {

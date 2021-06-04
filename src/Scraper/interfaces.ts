@@ -1,4 +1,4 @@
-import {IProfile} from "../interfaces"
+import {IFollower, IProfile} from "../interfaces"
 
 export interface IRequestOptions {
   proxy: string,
@@ -21,4 +21,26 @@ export interface IProfileScrapeRequest {
 
 export interface IProfileScraper {
   scrape: (profileScrapeRequest: IProfileScrapeRequest) => Promise<IProfile>,
+}
+
+export interface IFollowersScrapeRequest {
+  id: string,
+  after?: string,
+  proxy: string,
+}
+
+export interface IFollowersScraper {
+  scrape: (profileScrapeRequest: IFollowersScrapeRequest) => AsyncGenerator<IFollower[], void, void>,
+}
+
+export interface IFollowersRequestParams {
+  id: string,
+  include_reel: boolean,
+  first: number,
+  after?: string,
+}
+
+export interface IFollowersPageInfo {
+  has_next_page: boolean,
+  end_cursor?: string,
 }

@@ -1,8 +1,9 @@
 import ProfileScraper from "./ProfileScraper"
+import {IProfileScrapeRequest} from "./interfaces"
 
 
 (async () => {
-  const profileScrapeRequest = {
+  const profileScrapeRequest: IProfileScrapeRequest = {
     username: 'lindasbrasileiras20',
     proxy: 'http://obobw:CPDkGFzX@conn4.trs.ai:18033',
   }

@@ -34,6 +34,7 @@ export default class ProfileScraper implements IProfileScraper {
       const response = await this.requester.send(options)
       this.log(`Response Status: ${response.statusCode}`)
 
+      this.log(`Parsing HTML content...`)
       const profile = ProfileParser.parse(response.body)
 
       return Promise.resolve(profile)

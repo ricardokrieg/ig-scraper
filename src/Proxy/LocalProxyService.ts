@@ -1,5 +1,5 @@
 import debug from 'debug'
-import {reject, sample } from 'lodash'
+import {sample } from 'lodash'
 
 import {IProxyService} from "./interfaces"
 
@@ -8,7 +8,7 @@ export default class LocalProxyService implements IProxyService {
   private static instance: LocalProxyService
   private readonly log: any
 
-  private proxies: string[]
+  private readonly proxies: string[]
 
   private constructor() {
     this.proxies = [

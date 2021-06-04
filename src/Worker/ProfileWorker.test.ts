@@ -7,7 +7,12 @@ import JobStore from "../Job/JobStore"
   const jobRequest = { queueUrl: 'https://sqs.us-east-1.amazonaws.com/196763078229/test_ProfileJobs.fifo' }
 
   const profileWorker = new ProfileWorker('1', jobStore, jobRequest)
-  await profileWorker.run()
+  try {
+    await profileWorker.run()
+  } catch (err) {
+    console.error(err.message)
+    process.exit(1)
+  }
 
   process.exit(0)
 })()

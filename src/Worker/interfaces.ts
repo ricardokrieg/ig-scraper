@@ -1,7 +1,8 @@
-import {IJobStore} from "../Job/interfaces"
+import {IJob} from "../Job/interfaces"
 
 export interface IWorker {
   id: string
-  jobStore: IJobStore
   run: () => Promise<void>
+  getJob: () => Promise<IJob>
+  process: (job: IJob) => Promise<void>
 }

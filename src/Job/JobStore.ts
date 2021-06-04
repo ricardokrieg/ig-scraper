@@ -42,11 +42,11 @@ export default class JobStore implements IJobStore {
     const message = await this.getMessage(jobRequest)
     const body = JSON.parse(message.body) as IFollowersJobMessage
 
-    const {username, after, limit} = body
+    const {id, after, limit} = body
 
     return Promise.resolve({
       receiptHandle: message.receiptHandle,
-      username,
+      id,
       after,
       limit,
     } as IFollowersJob)
