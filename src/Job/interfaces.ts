@@ -30,6 +30,8 @@ export interface IMessage {
 }
 
 export interface IJobStore {
+  addProfileJob: (queueUrl: string, jobMessage: IProfileJobMessage) => Promise<void>,
+  addFollowersJob: (queueUrl: string, jobMessage: IFollowersJobMessage) => Promise<void>,
   getProfileJob: (jobRequest: IJobRequest) => Promise<IProfileJob>,
   getFollowersJob: (jobRequest: IJobRequest) => Promise<IFollowersJob>,
   removeJob: (jobRequest: IJobRequest, job: IJob) => Promise<void>,

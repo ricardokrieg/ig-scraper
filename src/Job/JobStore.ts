@@ -26,6 +26,32 @@ export default class JobStore implements IJobStore {
     this.log = debug('JobStore')
   }
 
+  async addProfileJob(queueUrl: string, jobMessage: IProfileJobMessage): Promise<void> {
+    const params = {
+      QueueUrl: queueUrl,
+      MessageBody: JSON.stringify(jobMessage),
+      MessageDeduplicationId: jobMessage.username,
+      MessageGroupId: jobMessage.username,
+    }
+
+    this.log(`Adding Profile Job ${JSON.stringify(jobMessage)} to Queue ${queueUrl}`)
+
+    return sqs.sendMessage(params).promise()
+  }
+
+  async addFollowersJob(queueUrl: string, jobMessage: IFollowersJobMessage): Promise<void> {
+    const params = {
+      QueueUrl: queueUrl,
+      MessageBody: JSON.stringify(jobMessage),
+      MessageDeduplicationId: jobMessage.id,
+      MessageGroupId: jobMessage.id,
+    }
+
+    this.log(`Adding Followers Job ${JSON.stringify(jobMessage)} to Queue ${queueUrl}`)
+
+    return sqs.sendMessage(params).promise()
+  }
+
   async getProfileJob(jobRequest: IJobRequest): Promise<IProfileJob> {
     const message = await this.getMessage(jobRequest)
     const body = JSON.parse(message.body) as IProfileJobMessage
@@ -42,13 +68,12 @@ export default class JobStore implements IJobStore {
     const message = await this.getMessage(jobRequest)
     const body = JSON.parse(message.body) as IFollowersJobMessage
 
-    const {id, after, limit} = body
+    const {id, after} = body
 
     return Promise.resolve({
       receiptHandle: message.receiptHandle,
       id,
       after,
-      limit,
     } as IFollowersJob)
   }
 
