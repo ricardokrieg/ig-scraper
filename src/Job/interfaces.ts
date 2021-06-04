@@ -31,7 +31,7 @@ export interface IMessage {
 }
 
 export interface IJobStore {
-  getProfileJob: (jobRequest: IJobRequest) => Promise<IProfileJob | undefined>,
-  getFollowersJob: (jobRequest: IJobRequest) => Promise<IFollowersJob | undefined>,
+  getProfileJob: (jobRequest: IJobRequest) => Promise<IProfileJob>,
+  getFollowersJob: (jobRequest: IJobRequest) => Promise<IFollowersJob>,
   removeJob: (jobRequest: IJobRequest, job: IJob) => Promise<void>,
 }

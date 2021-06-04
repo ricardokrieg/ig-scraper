@@ -7,7 +7,7 @@ import ProfileScraper from "./ProfileScraper"
     proxy: 'http://obobw:CPDkGFzX@conn4.trs.ai:18033',
   }
 
-  const profileScraper = new ProfileScraper()
+  const profileScraper = ProfileScraper.getInstance()
 
   try {
     const profile = await profileScraper.scrape(profileScrapeRequest)

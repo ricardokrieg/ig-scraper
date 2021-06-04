@@ -8,4 +8,6 @@ import JobStore from "../Job/JobStore"
 
   const profileWorker = new ProfileWorker('1', jobStore, jobRequest)
   await profileWorker.run()
+
+  process.exit(0)
 })()

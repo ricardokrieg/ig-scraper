@@ -7,12 +7,21 @@ import ProfileParser from "./ProfileParser"
 
 
 export default class ProfileScraper implements IProfileScraper {
+  private static instance: ProfileScraper
   private readonly log: any
   private readonly requester: IRequester
 
-  constructor() {
+  private constructor() {
     this.log = debug('ProfileScraper')
     this.requester = Requester.guest()
+  }
+
+  static getInstance(): ProfileScraper {
+    if (!this.instance) {
+      this.instance = new ProfileScraper()
+    }
+
+    return this.instance
   }
 
   async scrape(profileScrapeRequest: IProfileScrapeRequest): Promise<IProfile> {
