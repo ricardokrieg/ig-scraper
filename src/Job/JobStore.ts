@@ -3,6 +3,7 @@ import debug from 'debug'
 const AWS = require('aws-sdk')
 
 import {
+  IDMJobMessage,
   IFollowersJob,
   IFollowersJobMessage,
   IJob,
@@ -48,6 +49,19 @@ export default class JobStore implements IJobStore {
     }
 
     this.log(`Adding Followers Job ${JSON.stringify(jobMessage)} to Queue ${queueUrl}`)
+
+    return sqs.sendMessage(params).promise()
+  }
+
+  async addDMJob(queueUrl: string, jobMessage: IDMJobMessage): Promise<void> {
+    const params = {
+      QueueUrl: queueUrl,
+      MessageBody: JSON.stringify(jobMessage),
+      MessageDeduplicationId: jobMessage.username,
+      MessageGroupId: jobMessage.username,
+    }
+
+    this.log(`Adding DM Job ${JSON.stringify(jobMessage)} to Queue ${queueUrl}`)
 
     return sqs.sendMessage(params).promise()
   }

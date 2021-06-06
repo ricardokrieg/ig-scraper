@@ -47,11 +47,11 @@ export class FakeProfileFilter implements IProfileFilter {
     ])
 
     if (score >= SCORE_THRESHOLD) {
-      log(`${profile.full_name} (${profile.username}) PASS (${score.toFixed(2)})`)
+      log(`${profile.full_name} (${profile.username}) PASS (${(score * 100).toFixed(0)}%)`)
 
       return true
     } else {
-      log(`${profile.full_name} (${profile.username}) FAIL (${score.toFixed(2)})`)
+      log(`${profile.full_name} (${profile.username}) FAIL (${(score * 100).toFixed(0)}%)`)
 
       return false
     }

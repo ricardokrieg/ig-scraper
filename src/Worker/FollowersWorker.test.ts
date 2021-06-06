@@ -12,12 +12,7 @@ import FollowersProcessor from "../Processor/FollowersProcessor"
   const jobRequest = { queueUrl: followersQueueUrl }
 
   const followersWorker = new FollowersWorker('1', jobStore, jobRequest, followersProcessor)
-  try {
-    await followersWorker.run()
-  } catch (err) {
-    console.error(err.message)
-    process.exit(1)
-  }
+  await followersWorker.run()
 
   process.exit(0)
 })()

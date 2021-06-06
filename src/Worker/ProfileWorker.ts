@@ -5,12 +5,14 @@ import {IProfile} from "../interfaces"
 import {IProfileScraper, IProfileScrapeRequest} from "../Scraper/interfaces"
 import SharedProxyService from "../Proxy/SharedProxyService";
 import { pick } from "lodash"
+import {IProfileProcessor} from "../Processor/interfaces"
 
 
 export default class ProfileWorker extends BaseWorker {
   private readonly scraper: IProfileScraper
+  private readonly processor: IProfileProcessor
 
-  constructor(id: string, jobStore: IJobStore, jobRequest: IJobRequest) {
+  constructor(id: string, jobStore: IJobStore, jobRequest: IJobRequest, processor: IProfileProcessor) {
     super(
       id,
       'ProfileWorker',
@@ -20,6 +22,7 @@ export default class ProfileWorker extends BaseWorker {
     )
 
     this.scraper = ProfileScraper.getInstance()
+    this.processor = processor
   }
 
   async process(job: IProfileJob): Promise<void> {
@@ -30,6 +33,8 @@ export default class ProfileWorker extends BaseWorker {
 
     const profile: IProfile = await this.scraper.scrape(profileScrapeRequest)
     this.log(pick(profile, ['id', 'username']))
+
+    await this.processor.process(profile)
   }
 
   async getJob(): Promise<IJob> {

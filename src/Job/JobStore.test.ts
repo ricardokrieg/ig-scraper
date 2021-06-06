@@ -1,5 +1,5 @@
 import JobStore from "./JobStore"
-import {IFollowersJobMessage, IProfileJobMessage} from "./interfaces";
+import {IDMJobMessage, IFollowersJobMessage, IProfileJobMessage} from "./interfaces";
 
 
 const getProfileJob = async (jobStore: JobStore, queueUrl: string) => {
@@ -41,20 +41,26 @@ const addFollowersJob = async (jobStore: JobStore, queueUrl: string, jobMessage:
   return await jobStore.addFollowersJob(queueUrl, jobMessage)
 }
 
+const addDMJob = async (jobStore: JobStore, queueUrl: string, jobMessage: IDMJobMessage) => {
+  return await jobStore.addDMJob(queueUrl, jobMessage)
+}
+
 
 (async () => {
   const jobStore = new JobStore()
 
   const profileJobsQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_ProfileJobs.fifo'
   const followersJobsQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_FollowersJobs.fifo'
+  const dmJobsQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_DMJobs.fifo'
   const emptyJobsQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_Empty.fifo'
 
-  await getProfileJob(jobStore, profileJobsQueueUrl)
-  await getFollowersJob(jobStore, followersJobsQueueUrl)
-  await getEmptyJob(jobStore, emptyJobsQueueUrl)
+  // await getProfileJob(jobStore, profileJobsQueueUrl)
+  // await getFollowersJob(jobStore, followersJobsQueueUrl)
+  // await getEmptyJob(jobStore, emptyJobsQueueUrl)
 
-  await addProfileJob(jobStore, profileJobsQueueUrl, { username: 'lindasbrasileiras20' })
-  await addFollowersJob(jobStore, followersJobsQueueUrl, { id: '46914837090' })
+  // await addProfileJob(jobStore, profileJobsQueueUrl, { username: 'lindasbrasileiras20' })
+  // await addFollowersJob(jobStore, followersJobsQueueUrl, { id: '46914837090' })
+  await addDMJob(jobStore, dmJobsQueueUrl, { username: 'lindasbrasileiras20' })
 
   process.exit(0)
 })()

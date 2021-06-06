@@ -1,5 +1,5 @@
 import debug from 'debug'
-import {map, sample} from 'lodash'
+import {map, uniq} from 'lodash'
 const AWS = require('aws-sdk')
 
 import {IProxyResponse, IProxyService} from "./interfaces"
@@ -18,9 +18,7 @@ export default class SharedProxyService implements IProxyService {
   private proxies: string[]
 
   private constructor() {
-    this.proxies = [
-      'http://obobw:CPDkGFzX@conn4.trs.ai:18033'
-    ]
+    this.proxies = []
 
     this.log = debug('SharedProxyService')
   }
@@ -33,8 +31,12 @@ export default class SharedProxyService implements IProxyService {
     return this.instance
   }
 
+  async prepare(): Promise<void> {
+    return this.getProxiesFromDatabase()
+  }
+
   async proxy(): Promise<string> {
-    const proxy = await this.getProxyFromDatabase()
+    const proxy = await this.getProxyFromMemory()
 
     this.log(proxy)
     if (!proxy) return Promise.reject(new Error('No proxies available'))
@@ -57,8 +59,18 @@ export default class SharedProxyService implements IProxyService {
     return dynamodb.putItem(params).promise()
   }
 
-  private async getProxyFromDatabase(): Promise<string | undefined> {
-    this.log('Getting proxy from Database...')
+  private async getProxyFromMemory(): Promise<string | undefined> {
+    this.log(`Memory has ${this.proxies.length} proxies`)
+
+    if (this.proxies.length < 100) {
+      await this.getProxiesFromDatabase()
+    }
+
+    return Promise.resolve(this.proxies.pop())
+  }
+
+  private async getProxiesFromDatabase(): Promise<void> {
+    this.log('Getting proxies from Database...')
 
     const timestamp = Math.floor(new Date().getTime() / 1000)
     const params = {
@@ -71,8 +83,12 @@ export default class SharedProxyService implements IProxyService {
     }
 
     const proxies: IProxyResponse[] = (await documentClient.scan(params).promise()).Items
-    const proxy = sample(map(proxies, (proxy: IProxyResponse) => proxy.address))
+    this.proxies = [
+      ...this.proxies,
+      ...map(proxies, (proxy: IProxyResponse) => proxy.address)
+    ]
+    this.proxies = uniq(this.proxies)
 
-    return Promise.resolve(proxy)
+    return Promise.resolve()
   }
 }

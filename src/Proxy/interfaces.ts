@@ -1,4 +1,5 @@
 export interface IProxyService {
+  prepare: () => Promise<void>,
   proxy: () => Promise<string>,
   reject: (proxy: string) => Promise<void>,
 }

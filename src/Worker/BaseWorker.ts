@@ -84,7 +84,7 @@ export default abstract class BaseWorker implements IWorker {
 
         await this.jobStore.removeJob(this.jobRequest, job!)
       } else {
-        return Promise.reject(new Error(`Failed to process job after ${MAX_SECONDS} seconds. Exiting`))
+        this.log(`Failed to process job after ${MAX_SECONDS} seconds. Getting new Job`)
       }
     }
   }
