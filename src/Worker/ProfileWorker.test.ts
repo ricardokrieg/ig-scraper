@@ -3,7 +3,7 @@ import SharedProxyService from "../Proxy/SharedProxyService";
 Promise = require('bluebird')
 
 import ProfileWorker from "./ProfileWorker"
-import JobStore from "../Job/JobStore"
+import SQSJobStore from "../Job/SQSJobStore"
 import ProfileProcessor from "../Processor/ProfileProcessor"
 
 
@@ -13,7 +13,7 @@ import ProfileProcessor from "../Processor/ProfileProcessor"
 
   await SharedProxyService.getInstance().prepare()
 
-  const jobStore = new JobStore()
+  const jobStore = new SQSJobStore()
   const profileProcessor = await ProfileProcessor.NonFakeMale(jobStore, dmQueueUrl)
   const jobRequest = { queueUrl: profileQueueUrl }
 

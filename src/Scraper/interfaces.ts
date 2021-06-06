@@ -25,7 +25,7 @@ export interface IProfileScraper {
 
 export interface IFollowersScrapeRequest {
   id: string,
-  after?: string,
+  maxId?: number,
   proxy: string,
 }
 

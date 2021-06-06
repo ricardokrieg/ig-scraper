@@ -2,10 +2,9 @@ export interface IFollower {
   id: string,
   username: string,
   full_name: string,
-  profile_pic_url: string,
+  has_anonymous_profile_picture: boolean,
   is_private: boolean,
   is_verified: boolean,
-  has_reel: boolean,
 }
 
 export interface IProfile {

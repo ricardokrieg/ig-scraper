@@ -1,7 +1,7 @@
 import debug from 'debug'
 
 import {IWorker} from "./interfaces"
-import {IJobStore, IJobRequest, IJob} from "../Job/interfaces"
+import {ISQSJobStore, IJobRequest, IJob} from "../Job/interfaces"
 import {IProxyService} from "../Proxy/interfaces"
 
 const MAX_SECONDS = 5 * 60
@@ -10,14 +10,14 @@ const MAX_SECONDS = 5 * 60
 export default abstract class BaseWorker implements IWorker {
   id: string
 
-  protected jobStore: IJobStore
+  protected jobStore: ISQSJobStore
   protected jobRequest: IJobRequest
   protected proxy?: string
   protected proxyService: IProxyService
 
   protected readonly log: any
 
-  protected constructor(id: string, type: string, jobStore: IJobStore, jobRequest: IJobRequest, proxyService: IProxyService) {
+  protected constructor(id: string, type: string, jobStore: ISQSJobStore, jobRequest: IJobRequest, proxyService: IProxyService) {
     this.id = id
     this.jobStore = jobStore
     this.jobRequest = jobRequest

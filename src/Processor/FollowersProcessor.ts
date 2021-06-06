@@ -3,7 +3,7 @@ import { every } from 'lodash'
 
 import {IFollowersProcessor} from "./interfaces"
 import {IFollower} from "../interfaces"
-import {IJobStore} from "../Job/interfaces"
+import {ISQSJobStore} from "../Job/interfaces"
 import {IFollowerFilter} from "../Filter/interfaces"
 import {
   MaleFollowerFilter,
@@ -17,11 +17,11 @@ import prepareMaleNames from "../Utils/PrepareMaleNames"
 export default class FollowersProcessor implements IFollowersProcessor {
   private readonly log: any
 
-  private readonly jobStore: IJobStore
+  private readonly jobStore: ISQSJobStore
   private readonly queueUrl: string
   private readonly filters: IFollowerFilter[]
 
-  private constructor(jobStore: IJobStore, queueUrl: string, filters: IFollowerFilter[]) {
+  private constructor(jobStore: ISQSJobStore, queueUrl: string, filters: IFollowerFilter[]) {
     this.jobStore = jobStore
     this.queueUrl = queueUrl
     this.filters = filters
@@ -29,7 +29,7 @@ export default class FollowersProcessor implements IFollowersProcessor {
     this.log = debug('FollowersProcessor')
   }
 
-  static async NonFakeMale(jobStore: IJobStore, queueUrl: string): Promise<FollowersProcessor> {
+  static async NonFakeMale(jobStore: ISQSJobStore, queueUrl: string): Promise<FollowersProcessor> {
     const maleFollowerFilter = new MaleFollowerFilter()
     maleFollowerFilter.names = await prepareMaleNames()
 
@@ -45,6 +45,7 @@ export default class FollowersProcessor implements IFollowersProcessor {
 
   async process(followers: IFollower[]): Promise<void> {
     this.log(`Going to process ${followers.length} followers`)
+    this.log(followers)
 
     for (let follower of followers) {
       this.log(`Processing ${follower.username}`)

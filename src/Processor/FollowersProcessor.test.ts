@@ -1,4 +1,4 @@
-import JobStore from "../Job/JobStore"
+import SQSJobStore from "../Job/SQSJobStore"
 import FollowersProcessor from "../Processor/FollowersProcessor"
 import {IFollower} from "../interfaces"
 
@@ -6,7 +6,7 @@ import {IFollower} from "../interfaces"
 (async () => {
   const profileQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_ProfileJobs.fifo'
 
-  const jobStore = new JobStore()
+  const jobStore = new SQSJobStore()
   const followersProcessor = await FollowersProcessor.NonFakeMale(jobStore, profileQueueUrl)
 
   const followers: IFollower[] = [

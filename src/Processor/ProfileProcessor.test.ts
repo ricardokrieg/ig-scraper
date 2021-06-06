@@ -1,4 +1,4 @@
-import JobStore from "../Job/JobStore"
+import SQSJobStore from "../Job/SQSJobStore"
 import ProfileProcessor from "../Processor/ProfileProcessor"
 import {IProfile} from "../interfaces"
 
@@ -6,7 +6,7 @@ import {IProfile} from "../interfaces"
 (async () => {
   const dmQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_DMJobs.fifo'
 
-  const jobStore = new JobStore()
+  const jobStore = new SQSJobStore()
   const profileProcessor = await ProfileProcessor.NonFakeMale(jobStore, dmQueueUrl)
 
   const profile: IProfile = {

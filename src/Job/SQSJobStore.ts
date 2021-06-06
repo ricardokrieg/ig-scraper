@@ -4,11 +4,10 @@ const AWS = require('aws-sdk')
 
 import {
   IDMJobMessage,
-  IFollowersJob,
-  IFollowersJobMessage,
   IJob,
   IJobRequest,
-  IJobStore, IMessage,
+  ISQSJobStore,
+  IMessage,
   IProfileJob,
   IProfileJobMessage
 } from "./interfaces"
@@ -20,11 +19,11 @@ const sqs = new AWS.SQS()
 const MAX_TRIES = 3
 
 
-export default class JobStore implements IJobStore {
+export default class SQSJobStore implements ISQSJobStore {
   private readonly log: any
 
   constructor() {
-    this.log = debug('JobStore')
+    this.log = debug('SQSJobStore')
   }
 
   async addProfileJob(queueUrl: string, jobMessage: IProfileJobMessage): Promise<void> {
@@ -36,19 +35,6 @@ export default class JobStore implements IJobStore {
     }
 
     this.log(`Adding Profile Job ${JSON.stringify(jobMessage)} to Queue ${queueUrl}`)
-
-    return sqs.sendMessage(params).promise()
-  }
-
-  async addFollowersJob(queueUrl: string, jobMessage: IFollowersJobMessage): Promise<void> {
-    const params = {
-      QueueUrl: queueUrl,
-      MessageBody: JSON.stringify(jobMessage),
-      MessageDeduplicationId: jobMessage.id,
-      MessageGroupId: jobMessage.id,
-    }
-
-    this.log(`Adding Followers Job ${JSON.stringify(jobMessage)} to Queue ${queueUrl}`)
 
     return sqs.sendMessage(params).promise()
   }
@@ -76,19 +62,6 @@ export default class JobStore implements IJobStore {
       receiptHandle: message.receiptHandle,
       username,
     } as IProfileJob)
-  }
-
-  async getFollowersJob(jobRequest: IJobRequest): Promise<IFollowersJob> {
-    const message = await this.getMessage(jobRequest)
-    const body = JSON.parse(message.body) as IFollowersJobMessage
-
-    const {id, after} = body
-
-    return Promise.resolve({
-      receiptHandle: message.receiptHandle,
-      id,
-      after,
-    } as IFollowersJob)
   }
 
   async removeJob(jobRequest: IJobRequest, job: IJob) {

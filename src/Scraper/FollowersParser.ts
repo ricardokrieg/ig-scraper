@@ -4,16 +4,14 @@ import {IFollower} from "../interfaces"
 
 
 export default class FollowersParser {
-  static parse(nodes: any[]): IFollower[] {
-    return map(nodes, (node) => {
-      const latestReelMedia = node.reel.latest_reel_media
-
+  static parse(users: any[]): IFollower[] {
+    return map(users, (user) => {
       const follower: IFollower = {
         ...pick(
-          node,
-          ['id', 'username', 'full_name', 'profile_pic_url', 'is_private', 'is_verified']
+          user,
+          ['username', 'full_name', 'has_anonymous_profile_picture', 'is_private', 'is_verified']
         ),
-        has_reel: latestReelMedia !== 0 && latestReelMedia !== null,
+        id: user.pk,
       }
 
       return follower

@@ -12,7 +12,7 @@ export default class LocalProxyService implements IProxyService {
 
   private constructor() {
     this.proxies = [
-      'http://obobw:CPDkGFzX@conn4.trs.ai:18033'
+      'http://xoxpv:ydfHuegy@conn4.trs.ai:40760'
     ]
 
     this.log = debug('LocalProxyService')
@@ -39,5 +39,9 @@ export default class LocalProxyService implements IProxyService {
     this.log(`Reject ${proxy}`)
 
     return Promise.resolve()
+  }
+
+  prepare(): Promise<void> {
+    return Promise.resolve();
   }
 }
