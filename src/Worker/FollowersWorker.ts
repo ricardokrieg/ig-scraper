@@ -71,7 +71,13 @@ export default class FollowersWorker {
       proxy: this.proxy!,
     }
 
-    for await (let followers of this.scraper.scrape(followersScrapeRequest)) {
+    const onScrapedPage = async (nextMaxId: number) => {
+      this.log(`next_max_id: ${nextMaxId}`)
+
+      return this.service.addFollowersItem({ table: this.getItem.table, item: { ...item, maxId: nextMaxId } })
+    }
+
+    for await (let followers of this.scraper.scrape(followersScrapeRequest, onScrapedPage)) {
       this.log(`Got ${followers.length} followers`)
 
       await this.processor.process(followers)

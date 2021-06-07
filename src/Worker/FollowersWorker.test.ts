@@ -5,9 +5,13 @@ import SQSJobStore from "../Job/SQSJobStore"
 
 
 (async () => {
-  const profileQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_ProfileJobs.fifo'
   const jobStore = new SQSJobStore()
-  const followersProcessor = await FollowersProcessor.NonFakeMale(jobStore, profileQueueUrl)
+
+  // const profileQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_ProfileJobs.fifo'
+  // const followersProcessor = await FollowersProcessor.NonFakeMale(jobStore, profileQueueUrl)
+
+  const dmQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/switzerland_dm.fifo'
+  const followersProcessor = await FollowersProcessor.Switzerland(jobStore, dmQueueUrl)
 
   const service = new DynamoService()
   const getItem = { table: 'FOLLOWERS', id: '3017325194' }

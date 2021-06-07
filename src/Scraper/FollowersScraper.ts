@@ -1,9 +1,6 @@
-import {map} from "lodash";
 import debug from "debug"
 
 import {
-  IFollowersPageInfo,
-  IFollowersRequestParams,
   IFollowersScraper,
   IFollowersScrapeRequest,
   IRequester
@@ -33,7 +30,7 @@ export default class FollowersScraper implements IFollowersScraper {
     return this.instance
   }
 
-  async *scrape(followersScrapeRequest: IFollowersScrapeRequest): AsyncGenerator<IFollower[], void, void> {
+  async *scrape(followersScrapeRequest: IFollowersScrapeRequest, onScrapedPage: (nextMaxId: number) => Promise<void>): AsyncGenerator<IFollower[], void, void> {
     let hasNextPage = true
     while (hasNextPage) {
       const count = 12
@@ -45,7 +42,6 @@ export default class FollowersScraper implements IFollowersScraper {
 
       const response = await this.requester.send(options)
       this.log(`Response Status: ${response.statusCode}`)
-      this.log(response.body)
 
       this.log(`Parsing JSON content...`)
       const body = JSON.parse(response.body)
@@ -60,11 +56,11 @@ export default class FollowersScraper implements IFollowersScraper {
       if (!!next_max_id) {
         hasNextPage = true
         followersScrapeRequest.maxId = parseInt(next_max_id)
+
+        await onScrapedPage(followersScrapeRequest.maxId)
       } else {
         hasNextPage = false
       }
-
-      // TODO save updated followersScrapeRequest (save to SQS again, so that can continue from where it stopped)
     }
 
     return Promise.resolve()

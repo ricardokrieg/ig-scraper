@@ -43,9 +43,18 @@ export default class FollowersProcessor implements IFollowersProcessor {
     return Promise.resolve(new FollowersProcessor(jobStore, queueUrl, filters))
   }
 
+  static async Switzerland(jobStore: ISQSJobStore, queueUrl: string): Promise<FollowersProcessor> {
+    const filters: IFollowerFilter[] = [
+      new NonPrivateFollowerFilter(),
+      new NonVerifiedFollowerFilter(),
+      new UsernameNameMatchesFollowerFilter(),
+    ]
+
+    return Promise.resolve(new FollowersProcessor(jobStore, queueUrl, filters))
+  }
+
   async process(followers: IFollower[]): Promise<void> {
     this.log(`Going to process ${followers.length} followers`)
-    this.log(followers)
 
     for (let follower of followers) {
       this.log(`Processing ${follower.username}`)
