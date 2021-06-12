@@ -8,8 +8,8 @@ import ProfileProcessor from "../Processor/ProfileProcessor"
 
 
 (async () => {
-  const profileQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_ProfileJobs.fifo'
-  const dmQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/test_DMJobs.fifo'
+  const profileQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/iphonePrizes_DM.fifo'
+  const dmQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/iphonePrizes_Messages.fifo'
 
   await SharedProxyService.getInstance().prepare()
 

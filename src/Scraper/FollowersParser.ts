@@ -9,7 +9,7 @@ export default class FollowersParser {
       const follower: IFollower = {
         ...pick(
           user,
-          ['username', 'full_name', 'has_anonymous_profile_picture', 'is_private', 'is_verified']
+          ['username', 'full_name', 'has_anonymous_profile_picture', 'is_private', 'is_verified', 'profile_pic_url']
         ),
         id: user.pk,
       }

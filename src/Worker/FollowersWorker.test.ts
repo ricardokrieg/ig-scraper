@@ -11,7 +11,8 @@ import SQSJobStore from "../Job/SQSJobStore"
   // const followersProcessor = await FollowersProcessor.NonFakeMale(jobStore, profileQueueUrl)
 
   const dmQueueUrl = 'https://sqs.us-east-1.amazonaws.com/196763078229/iphonePrizes_DM.fifo'
-  const followersProcessor = await FollowersProcessor.Basic(jobStore, dmQueueUrl)
+  // const followersProcessor = await FollowersProcessor.Basic(jobStore, dmQueueUrl)
+  const followersProcessor = await FollowersProcessor.IPhonePrizes(jobStore, dmQueueUrl)
 
   const service = new DynamoService()
   const getItem = { table: 'FOLLOWERS', id: '2012926467' }

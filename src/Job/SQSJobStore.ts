@@ -9,7 +9,7 @@ import {
   ISQSJobStore,
   IMessage,
   IProfileJob,
-  IProfileJobMessage
+  IProfileJobMessage, IIPhonePrizesJobMessage
 } from "./interfaces"
 
 
@@ -35,6 +35,19 @@ export default class SQSJobStore implements ISQSJobStore {
     }
 
     this.log(`Adding Profile Job ${JSON.stringify(jobMessage)} to Queue ${queueUrl}`)
+
+    return sqs.sendMessage(params).promise()
+  }
+
+  async addIPhonePrizesJob(queueUrl: string, jobMessage: IIPhonePrizesJobMessage): Promise<void> {
+    const params = {
+      QueueUrl: queueUrl,
+      MessageBody: JSON.stringify(jobMessage),
+      MessageDeduplicationId: jobMessage.username,
+      MessageGroupId: jobMessage.username,
+    }
+
+    this.log(`Adding IPhonePrizes Job ${JSON.stringify(jobMessage)} to Queue ${queueUrl}`)
 
     return sqs.sendMessage(params).promise()
   }

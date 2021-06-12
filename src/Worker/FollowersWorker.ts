@@ -77,10 +77,11 @@ export default class FollowersWorker {
       return this.service.addFollowersItem({ table: this.getItem.table, item: { ...item, maxId: nextMaxId } })
     }
 
-    for await (let followers of this.scraper.scrape(followersScrapeRequest, onScrapedPage)) {
+    for await (let followers of this.scraper.scrape(followersScrapeRequest, onScrapedPage, 'followers')) {
       this.log(`Got ${followers.length} followers`)
 
-      await this.processor.process(followers)
+      // await this.processor.process(followers)
+      await this.processor.processForIPhonePrizes(followers)
     }
   }
 }

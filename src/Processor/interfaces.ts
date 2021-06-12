@@ -1,7 +1,8 @@
 import {IFollower, IProfile} from "../interfaces"
 
 export interface IFollowersProcessor {
-  process: (followers: IFollower[]) => Promise<void>
+  process: (followers: IFollower[]) => Promise<void>,
+  processForIPhonePrizes: (followers: IFollower[]) => Promise<void>
 }
 
 export interface IProfileProcessor {

@@ -30,7 +30,7 @@ export interface IFollowersScrapeRequest {
 }
 
 export interface IFollowersScraper {
-  scrape: (profileScrapeRequest: IFollowersScrapeRequest, onScrapedPage: (nextMaxId: number) => Promise<void>) => AsyncGenerator<IFollower[], void, void>,
+  scrape: (profileScrapeRequest: IFollowersScrapeRequest, onScrapedPage: (nextMaxId: number) => Promise<void>, relationshipType: string) => AsyncGenerator<IFollower[], void, void>,
 }
 
 export interface IFollowersRequestParams {

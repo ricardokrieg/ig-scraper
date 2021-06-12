@@ -30,12 +30,12 @@ export default class FollowersScraper implements IFollowersScraper {
     return this.instance
   }
 
-  async *scrape(followersScrapeRequest: IFollowersScrapeRequest, onScrapedPage: (nextMaxId: number) => Promise<void>): AsyncGenerator<IFollower[], void, void> {
+  async *scrape(followersScrapeRequest: IFollowersScrapeRequest, onScrapedPage: (nextMaxId: number) => Promise<void>, relationshipType: string): AsyncGenerator<IFollower[], void, void> {
     let hasNextPage = true
     while (hasNextPage) {
       const count = 12
       const maxId = followersScrapeRequest.maxId
-      const url = `/api/v1/friendships/${followersScrapeRequest.id}/followers/?count=${count}&max_id=${maxId}&search_surface=follow_list_page`
+      const url = `/api/v1/friendships/${followersScrapeRequest.id}/${relationshipType}/?count=${count}&max_id=${maxId}&search_surface=follow_list_page`
       const options = { proxy: followersScrapeRequest.proxy, url }
 
       this.log(`Scraping ${url}`)
