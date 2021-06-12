@@ -8,7 +8,7 @@ import {IFollowerFilter} from "../Filter/interfaces"
 import {
   MaleFollowerFilter,
   NonPrivateFollowerFilter,
-  NonVerifiedFollowerFilter,
+  NonVerifiedFollowerFilter, ProfilePictureFollowerFilter,
   UsernameNameMatchesFollowerFilter
 } from "../Filter"
 import prepareMaleNames from "../Utils/PrepareMaleNames"
@@ -48,6 +48,16 @@ export default class FollowersProcessor implements IFollowersProcessor {
       new NonPrivateFollowerFilter(),
       new NonVerifiedFollowerFilter(),
       new UsernameNameMatchesFollowerFilter(),
+    ]
+
+    return Promise.resolve(new FollowersProcessor(jobStore, queueUrl, filters))
+  }
+
+  static async Basic(jobStore: ISQSJobStore, queueUrl: string): Promise<FollowersProcessor> {
+    const filters: IFollowerFilter[] = [
+      new NonPrivateFollowerFilter(),
+      new NonVerifiedFollowerFilter(),
+      new ProfilePictureFollowerFilter(),
     ]
 
     return Promise.resolve(new FollowersProcessor(jobStore, queueUrl, filters))

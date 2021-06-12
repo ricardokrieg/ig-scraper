@@ -12,7 +12,7 @@ export default class LocalProxyService implements IProxyService {
 
   private constructor() {
     this.proxies = [
-      'http://xoxpv:ydfHuegy@conn4.trs.ai:40760'
+      'http://gulgd:AQKCCUGo@conn4.trs.ai:49726'
     ]
 
     this.log = debug('LocalProxyService')
