@@ -19,12 +19,13 @@ export interface IIPhonePrizesJobMessage {
   full_name: string,
   username: string,
   link: string,
-  tagger_name: string,
-  tagger_username: string,
+  // tagger_name: string,
+  // tagger_username: string,
 }
 
 export interface IDMJobMessage {
   username: string,
+  full_name: string,
 }
 
 export interface IJobRequest {

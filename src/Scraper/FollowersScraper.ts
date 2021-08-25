@@ -18,7 +18,7 @@ export default class FollowersScraper implements IFollowersScraper {
   private constructor() {
     this.log = debug('FollowersScraper')
 
-    const cookies = `ig_did=B0B787F1-FFC9-4968-9360-49E87C522A2B; ig_nrcb=1; mid=YGCSRwAEAAF5mYEy03FhLhp4Kkwi; csrftoken=hhduqJ58l3udQ5fV0Bp2QpQqqxA1GfkZ; ds_user_id=47733923314; sessionid=47733923314:KgYsPHOgbeV9ti:0; shbid=16161; rur=ASH; ig_direct_region_hint=ATN; shbts=1623429729.713088`
+    const cookies = `ig_did=B0B787F1-FFC9-4968-9360-49E87C522A2B; ig_nrcb=1; mid=YGCSRwAEAAF5mYEy03FhLhp4Kkwi; shbid=16161; rur=ASH; shbts=1623429729.713088; csrftoken=kGOZG3waz1NXVOrPOXIqFhhJiMHXNMfq; ds_user_id=48117313086; sessionid=48117313086:O2gzYO5PW5pzCN:26`
     this.requester = Requester.auth(cookies)
   }
 

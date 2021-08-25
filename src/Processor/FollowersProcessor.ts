@@ -116,21 +116,21 @@ export default class FollowersProcessor implements IFollowersProcessor {
         const imageDownloader = ImageDownloader.getInstance()
         const imageUrl = await imageDownloader.download(username, profile_pic_url)
 
-        const campaignUrl = 'https://mandanudes.online/go/36ee48ea-ab0a-49ff-b487-949e92cf2372'
+        const campaignUrl = 'https://mandanudes.online/go/d61b2095-ba06-4fb6-8ffe-845d1279c62a'
 
         const linkCreator = LinkCreator.getInstance()
         const longUrl = linkCreator.generateLongUrl(campaignUrl, full_name, username, imageUrl)
         const link = await linkCreator.create(longUrl)
 
         try {
-          const tagger = await this.getTagger(follower)
+          // const tagger = await this.getTagger(follower)
 
           const jobMessage: IIPhonePrizesJobMessage = {
             username,
             full_name,
             link,
-            tagger_name: tagger.full_name,
-            tagger_username: tagger.username,
+            // tagger_name: tagger.full_name,
+            // tagger_username: tagger.username,
           }
 
           await this.jobStore.addIPhonePrizesJob(this.queueUrl, jobMessage)
@@ -147,20 +147,20 @@ export default class FollowersProcessor implements IFollowersProcessor {
     return every(this.filters, (filter) => filter.check(follower))
   }
 
-  private async getTagger(follower: IFollower): Promise<IFollower> {
+  private async getTagger(user: IFollower): Promise<IFollower> {
     const scraper = FollowersScraper.getInstance()
     const proxy = await LocalProxyService.getInstance().proxy()
 
     const followersScrapeRequest: IFollowersScrapeRequest = {
-      id: follower.id,
+      id: user.id,
       maxId: 0,
       proxy,
     }
 
-    for await (let following of scraper.scrape(followersScrapeRequest, () => Promise.resolve(), 'following')) {
-      for (let followingUser of following) {
-        if (!isEmpty(followingUser.full_name)) {
-          return Promise.resolve(followingUser)
+    for await (let followers of scraper.scrape(followersScrapeRequest, () => Promise.resolve(), 'followers')) {
+      for (let follower of followers) {
+        if (!isEmpty(follower.full_name)) {
+          return Promise.resolve(follower)
         }
       }
     }
